@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Home System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel ="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-home"></i> SmartHome
+            </a>
+            <button class="btn nav-login-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </div>
+    </nav>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id= "loginform" action="login.php" method="POST">
+                        <div class="mb-3">
+                            <label for="usernumber" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="usernumber" name="usernumber" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTROLS -->
+    <div class="control-grid">
+        <button class="btn big-button" data-bs-toggle="modal" data-bs-target="#roomControlModal">
+            <i class="fas fa-door-open"></i>
+            Room Control
+        </button>
+        <button class="btn big-button" data-bs-toggle="modal" data-bs-target="#tempModal">
+            <i class="fas fa-thermometer-full"></i>
+            Temperature
+        </button>
+        <button class="btn big-button">
+            <i class="fas fa-bolt"></i>
+            Energy Usage
+        </button>
+        <button class="btn big-button">
+            <i class="fas fa-cog"></i>
+            Settings
+        </button>
+    </div>
+
+    <!-- ROOM CONTROL MODAL -->
+    <div class="modal fade" id="roomControlModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fs-4"><i class="fas fa-sliders-h me-2"></i>Room Controls</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- MAIN MENU -->
+                    <div class="main-menu text-center">
+                        <button class="btn modal-menu-button" data-target="lights-control">
+                            <i class="fas fa-lightbulb"></i> Lights
+                        </button>
+                        <button class="btn modal-menu-button" data-target="shutters-control">
+                            <i class="fas fa-blinds"></i> Shutters
+                        </button>
+                        <button class="btn modal-menu-button" data-target="climate-control">
+                            <i class="fas fa-fan"></i> Climate
+                        </button>
+                    </div>
+
+                    <!-- SUBMENUS -->
+                    <div id="lights-control" class="sub-menu">
+                        <div class="toggle-container">
+                            <div class="toggle-item">
+                                <span>Bedroom Lights</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Living Room Lights</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <button class="btn btn-back btn-lg w-100 mt-3">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="shutters-control" class="sub-menu">
+                        <div class="toggle-container">
+                            <div class="toggle-item">
+                                <span>Bedroom Shutters</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Living Room Shutters</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <button class="btn btn-back btn-lg w-100 mt-3">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="climate-control" class="sub-menu">
+                        <div class="toggle-container">
+                            <div class="toggle-item">
+                                <span>Air Conditioning</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Heating System</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <button class="btn btn-back btn-lg w-100 mt-3">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- TEMP CONTROL MODAL -->
+<div class="modal fade" id="tempModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fs-4"><i class="fas fa-sliders-h me-2"></i>Temperature</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="temp-control-wrapper">
+            <div class="temp-control-left">
+              <div class="temp-buttons">
+                <button class="btn temp-btn plus-btn">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <div class="temperature-display">20°C</div>
+                <button class="btn temp-btn minus-btn">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+              <div class="thermometer">
+                <div class="touter">
+                  <div class="tinner"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="temp-list-right">
+              <div class="temp-box-cold">9am: 18°C</div>
+              <div class="temp-box-warm">10am: 20°C</div>
+              <div class="temp-box-hot">11am: 22°C</div>
+              <div class="temp-box-hot">12pm: 24°C</div>
+              <div class="temp-box-hot">1pm: 26°C</div>
+              <div class="temp-box-hot">2pm: 28°C</div>
+              <div class="temp-box-hot">3pm: 30°C</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="menu.js">  </script>
+</body>
+</html>

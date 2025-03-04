@@ -2,16 +2,16 @@
   --primary-color: #332215;
   --secondary-color: #80533b;
   --accent-color: #7c5f45;
-  --background-color: #4A3429;
+  --background-color: #4a3429;
   --surface-color: #415716;
-  --text-color: #E3D5C8;
-  --positive-feedback: #6B8E23;
+  --text-color: #e3d5c8;
+  --positive-feedback: #6b8e23;
   --interactive-highlight: #5c3926;
   --border-contrast: #3f2e25;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background: var(--background-color);
   color: var(--text-color);
   padding-top: 0;
@@ -20,7 +20,7 @@ body {
 
 .navbar {
   background: var(--surface-color) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-bottom: 2px solid var(--border-contrast);
   position: fixed;
   top: 0;
@@ -141,7 +141,7 @@ body {
   right: 0;
   bottom: 0;
   background-color: var(--border-contrast);
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 34px;
 }
 
@@ -153,7 +153,7 @@ body {
   left: 4px;
   bottom: 4px;
   background-color: var(--text-color);
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
@@ -237,9 +237,15 @@ input:checked + .toggle-slider:before {
   transition: all 0.2s ease;
 }
 
-.temp-box-cold { background: var(--primary-color); }
-.temp-box-warm { background: var(--secondary-color); }
-.temp-box-hot { background: var(--accent-color); }
+.temp-box-cold {
+  background: var(--primary-color);
+}
+.temp-box-warm {
+  background: var(--secondary-color);
+}
+.temp-box-hot {
+  background: var(--accent-color);
+}
 
 .temp-box-cold:hover,
 .temp-box-warm:hover,
@@ -260,4 +266,56 @@ input:checked + .toggle-slider:before {
   font-size: 2.2rem;
   font-weight: bold;
   margin: 10px 0;
+}
+
+/* Fall Alert Button Styling */
+.fall-alert-container {
+  text-align: center;
+  margin-top: 40px;
+  width: 100vw;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.fall-alert-button {
+  background-color: #b8312f;
+  color: var(--text-color);
+  font-size: 28px;
+  padding: 20px 40px;
+  border: 3px solid var(--border-contrast);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 80%;
+}
+
+.fall-alert-button:hover {
+  background-color: #962928;
+  transform: scale(1.02);
+  border-color: var(--secondary-color);
+}
+
+#fallAlertMessage {
+  background-color: var(--positive-feedback);
+  color: var(--text-color);
+  border: 2px solid var(--border-contrast);
+  border-radius: 12px;
+  width: 80%;
+  max-width: 100%;
+  padding: 15px;
+  font-size: 1.2rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#fallAlertMessage.show {
+  display: block;
+  opacity: 1;
 }

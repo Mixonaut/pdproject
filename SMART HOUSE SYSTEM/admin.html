@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="#"
+          ><i class="fas fa-home"></i> SmartHome Admin</a
+        >
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <h2 class="mb-4">Admin Dashboard</h2>
+
+      <!-- Nav Filters -->
+      <ul class="nav nav-pills mb-3" id="timePeriodNav" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="time-period-button nav-link active"
+            id="day-tab"
+            data-value="day"
+            type="button"
+            role="tab"
+          >
+            Day
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="time-period-button nav-link"
+            id="month-tab"
+            data-value="month"
+            type="button"
+            role="tab"
+          >
+            Month
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="time-period-button nav-link"
+            id="year-tab"
+            data-value="year"
+            type="button"
+            role="tab"
+          >
+            Year
+          </button>
+        </li>
+      </ul>
+
+      <!-- chart filter options -->
+      <div class="mb-3" id="additionalFilters" style="display: none">
+        <!-- Filter for selecting day -->
+        <div id="filterDay" style="display: none">
+          <label for="dayInput" class="form-label">Select Date:</label>
+          <input
+            type="date"
+            class="form-control"
+            id="dayInput"
+            style="max-width: 200px"
+          />
+        </div>
+        <!-- Filter for selecting month -->
+        <div id="filterMonth" style="display: none">
+          <label for="monthSelect" class="form-label">Select Month:</label>
+          <select class="form-select" id="monthSelect" style="max-width: 200px">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <!-- Filter for selecting year -->
+        <div id="filterYear" style="display: none">
+          <label for="yearSelect" class="form-label">Select Year:</label>
+          <select class="form-select" id="yearSelect" style="max-width: 200px">
+            <option value="2024">2024</option>
+            <option value="2025" selected>2025</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Combined Chart & Filters in One Section -->
+      <div class="overview-container">
+        <!-- Rooms Dropdown (Toggling) -->
+        <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 1rem">
+          <select
+            id="roomsSelect"
+            class="form-select d-inline-block"
+            multiple
+            style="width: 150px"
+          >
+            <option value="All" selected>All Rooms</option>
+            <option value="101">Room 101</option>
+            <option value="102">Room 102</option>
+            <option value="103">Room 103</option>
+          </select>
+        </div>
+
+        <canvas id="energyChart" class="chart-container"></canvas>
+        <div class="stats-container">
+          <p>
+            <strong>Total Energy Usage:</strong>
+            <span id="energyUsage">Loading...</span>
+          </p>
+          <p>
+            <strong>Active Devices:</strong>
+            <span id="deviceStatus">Loading...</span>
+          </p>
+          <p>
+            <strong>Recent Alerts:</strong> <span id="alerts">No alerts</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Resident Room Access -->
+      <div class="card mb-4">
+        <div class="card-header">Resident Room Access</div>
+        <div class="card-body room-grid">
+          <div class="room-button">Room 101</div>
+          <div class="room-button">Room 102</div>
+          <div class="room-button">Room 103</div>
+          <div class="room-button">Room 104</div>
+          <div class="room-button">Room 105</div>
+        </div>
+      </div>
+
+      <!-- User Management -->
+      <div class="card mb-4">
+        <div class="card-header">User Management</div>
+        <div class="card-body">
+          <button class="btn btn-success">Add User</button>
+          <button class="btn btn-warning">Edit User</button>
+          <button class="btn btn-danger">Remove User</button>
+        </div>
+      </div>
+    </div>
+    <script src="admin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

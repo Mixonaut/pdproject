@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Set initial chart and stats
   setChartData("day");
-  updateStats("day");
 
   const roomsSelect = document.getElementById("roomsSelect");
   if (roomsSelect) {
@@ -206,32 +205,6 @@ function setChartData(period) {
   energyChart.update();
 }
 
-//a maybe too elaborate way for randomising data totals (whoops)
-function updateStats(period) {
-  const datasets = energyChart.data.datasets;
-  const roomDatasets = datasets.filter((dataset) => dataset.label !== "Total");
-  const totalEnergy = roomDatasets.reduce(
-    (acc, dataset) => acc + dataset.data.reduce((sum, val) => sum + val, 0),
-    0
-  );
-  const periodText =
-    period === "day" ? "Daily" : period === "month" ? "Monthly" : "Yearly";
-  document.getElementById(
-    "energyUsage"
-  ).textContent = `${totalEnergy} kWh (${periodText})`;
-
-  const numRooms = roomDatasets.length;
-  const activeDevices = numRooms * 10;
-  document.getElementById(
-    "deviceStatus"
-  ).textContent = `${activeDevices} devices active`;
-
-  const alerts = Math.floor(Math.random() * 5);
-  document.getElementById(
-    "alerts"
-  ).textContent = `${alerts} ${periodText.toLowerCase()} alerts`;
-}
-
 /*******************************************
  * TIME PERIOD & FILTERS
  *******************************************/
@@ -262,19 +235,16 @@ if (yearTab) {
 if (dayInput) {
   dayInput.addEventListener("change", function () {
     setChartData("day");
-    updateStats("day");
   });
 }
 if (monthSelect) {
   monthSelect.addEventListener("change", function () {
     setChartData("month");
-    updateStats("month");
   });
 }
 if (yearSelect) {
   yearSelect.addEventListener("change", function () {
     setChartData("year");
-    updateStats("year");
   });
 }
 
@@ -294,7 +264,6 @@ function setActivePeriod(period) {
   currentPeriod = period; // Update current period
   toggleFilter(period);
   setChartData(period);
-  updateStats(period);
 }
 
 function toggleFilter(mode) {
@@ -315,17 +284,3 @@ function toggleFilter(mode) {
 /*******************************************
  * USER MANAGEMENT TODO
  *******************************************/
-
-const btnAddUser = document.getElementById("btnAddUser");
-const btnEditUser = document.getElementById("btnEditUser");
-const btnRemoveUser = document.getElementById("btnRemoveUser");
-
-if (btnAddUser) {
-  btnAddUser.addEventListener("click", function () {});
-}
-if (btnEditUser) {
-  btnEditUser.addEventListener("click", function () {});
-}
-if (btnRemoveUser) {
-  btnRemoveUser.addEventListener("click", function () {});
-}

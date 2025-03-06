@@ -179,9 +179,18 @@
         </div>
 
         <div class="overview-container">
+          <!-- View toggle dropdown -->
+          <select
+            id="viewSelect"
+            class="form-select d-inline-block mb-1"
+            style="width: 150px"
+          >
+            <option value="room" selected>By Room</option>
+            <option value="device">By Device</option>
+          </select>
           <!-- Example Rooms Select (multiple) -->
           <div
-            class="d-flex flex-wrap align-items-center mb-2"
+            class="d-flex flex-wrap align-items-center mb-1"
             style="gap: 1rem"
           >
             <select
@@ -202,14 +211,47 @@
             class="chart-container mb-3"
             style="height: 300px"
           ></canvas>
+
+          <!-- Export buttons -->
+          <button class="btn btn-primary mb-3" id="exportChart">
+            Export Chart
+          </button>
+          <button class="btn btn-primary mb-3" id="exportCSV">
+            Export CSV
+          </button>
+
+          <!-- Alerts button and modal -->
+          <button
+            class="btn btn-info mb-3"
+            data-bs-toggle="modal"
+            data-bs-target="#alertsModal"
+          >
+            View Alerts
+          </button>
+          <div class="modal fade" id="alertsModal" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Recent Alerts</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                  ></button>
+                </div>
+                <div class="modal-body" id="alertsList"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="stats-container">
             <p>
               <strong>Total Energy Usage:</strong>
-              <span id="energyUsage">Loading...</span>
+              <span id="energyUsage">0</span>
             </p>
             <p>
               <strong>Active Devices:</strong>
-              <span id="deviceStatus">Loading...</span>
+              <span id="deviceStatus">0</span>
             </p>
             <p>
               <strong>Recent Alerts:</strong> <span id="alerts">No alerts</span>

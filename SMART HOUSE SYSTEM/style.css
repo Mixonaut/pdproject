@@ -377,3 +377,7 @@ input:checked + .toggle-slider:before {
 .nav-pills .nav-link.active {
   background-color: var(--positive-feedback);
 }
+
+.offcanvas {
+  max-width: 300px;
+}

@@ -1,0 +1,25 @@
+## ADMIN PAGE ##
+
+# USER MANAGEMENT #
+- Functionality for creating/deleting/modifying accounts
+
+# ENERGY AND DEVICE MONITORING # 
+Most of this is somewhat completed front-end wise (needs backend endpoints to function properly)
+    - Set energy goals and view progress of goals (if we have time)
+
+# DEVICE MANAGEMENT AND REMOTE CONTROL #
+- Manage all user devices remotely
+    - turning devices on/off
+    - adjusting settings (e.g heating)
+    - scheduling devices
+- View real time device status for any room
+
+# ANOMALY DETECTION #
+- Set up detection for unusual device activity (e.g lights left on)
+- Set up system to receive alerts (e.g fall alert)
+- Create priority levels for alerts (emergency, warning etc)
+
+# DAILY REPORT GENERATION #
+- Implemented buttons to export energy information but this needs logic completed (if we can?)
+
+

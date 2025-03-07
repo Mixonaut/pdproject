@@ -381,3 +381,16 @@ input:checked + .toggle-slider:before {
 .offcanvas {
   max-width: 300px;
 }
+
+#summaryContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+#energySummary {
+  gap: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}

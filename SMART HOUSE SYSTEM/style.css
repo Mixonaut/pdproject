@@ -394,3 +394,33 @@ input:checked + .toggle-slider:before {
   border-radius: 10px;
   margin-bottom: 20px;
 }
+
+#roomsSelect {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.roomLabel {
+  height: 30px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background-color: var(--positive-feedback);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.roomLabel:hover {
+  background-color: var(--accent-color);
+}
+
+.selected {
+  background-color: var(--surface-color);
+}

@@ -14,7 +14,7 @@ const users = []
 const preRegisterUser = async () => {
     try {
         const hashedPassword = await bcrypt.hash('password123', 10); // Hash the password
-        const user = { name: 'john', password: hashedPassword }; // Create a user object
+        const user = { name: 'john', password: hashedPassword, isAdmin: false}; // Create a user object
         users.push(user); // Add the user to the array
         console.log('Pre-registered user:', user);
     } catch (error) {
@@ -22,16 +22,29 @@ const preRegisterUser = async () => {
     }
 };
 
+const preRegisterAdmin = async () => { //TODO: this is just a temporary way of doing this cos i cba to do it properly, need to push both in the same method 
+  try {
+      const hashedPassword = await bcrypt.hash('password123', 10); // Hash the password
+      const user = { name: 'nolan', password: hashedPassword, isAdmin: true}; // Create a user object
+      users.push(user); // Add the user to the array
+      console.log('Pre-registered user:', user);
+  } catch (error) {
+      console.error('Error pre-registering user:', error);
+  }
+};
+
 preRegisterUser();
+preRegisterAdmin();
 
 app.get('/users', (req, res) => {
   res.json(users)
 })
 
-app.post('/users', async (req, res) => {
+app.post('/users', async (req, res) => {//register user
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const user = { name: req.body.name, password: hashedPassword }
+    const isAdmin = req.body.isAdmin
+    const user = { name: req.body.name, password: hashedPassword , isAdmin: isAdmin}
     users.push(user)
     res.status(201).send()
   } catch {
@@ -46,7 +59,12 @@ app.post('/users/login', async (req, res) => {
   }
   try {
     if(await bcrypt.compare(req.body.password, user.password)) {
+      if (user.isAdmin){
+        res.send('Sucadmin')
+      }
+      else{
       res.send('Success')
+      }
     } else {
       res.send('Not Allowed')
     }
@@ -65,6 +83,10 @@ app.get('/', (req, res) => {
 
 app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 app.listen(3000)

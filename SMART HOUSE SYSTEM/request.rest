@@ -6,7 +6,7 @@ POST http://localhost:3000/users
 Content-Type: application/json
 
 {
-"name": "Kyle", "password": "password"
+"name": "Kyle", "password": "password", "isAdmin": true
 }
 
 ###
@@ -16,5 +16,6 @@ Content-Type: application/json
 
 {
 "name": "Kyle", 
-"password": "password1"
+"password": "password",
+"isAdmin": false
 }

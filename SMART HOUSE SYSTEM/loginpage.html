@@ -96,11 +96,20 @@
  const result = await response.text(); // Get the response text
             const messageDiv = document.getElementById('message');
 
-            if (response.ok && result === 'Success') {
+            if (response.ok && result === 'Sucadmin') {
+                messageDiv.textContent = 'Login successful!';
+                messageDiv.style.color = 'green';
+                window.location.href = '/admin';
+            } 
+
+            else if (response.ok && result === 'Success') {
                 messageDiv.textContent = 'Login successful!';
                 messageDiv.style.color = 'green';
                 window.location.href = '/app';
-            } else {
+
+            }
+            
+            else {
                 messageDiv.textContent = result || 'Login failed. Please check your credentials.';
                 messageDiv.style.color = 'red';
             }

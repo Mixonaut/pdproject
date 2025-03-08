@@ -4,8 +4,6 @@
 
 document.addEventListener("DOMContentLoaded", function () {
   const sectionAnalytics = document.getElementById("sectionAnalytics");
-  const sectionRooms = document.getElementById("sectionRooms");
-  const sectionUsers = document.getElementById("sectionUsers");
 
   // Show Analytics by default
   sectionAnalytics.classList.remove("d-none");
@@ -22,16 +20,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize Chart.js chart
   initEnergyChart();
+  populateRooms();
+  setActivePeriod("day");
 
-  // Set initial chart and stats
-  setChartData("day");
-
-  const roomsSelect = document.getElementById("roomsSelect");
-  if (roomsSelect) {
-    roomsSelect.addEventListener("change", function () {
-      setChartData(currentPeriod);
-      updateStats(currentPeriod);
-    });
+  //add event listeners to room buttons for updating the chart when selected
+  const roomButtons = document.querySelectorAll("#roomsSelect .roomLabel");
+  if (roomButtons) {
+    roomButtons.forEach((button) =>
+      button.addEventListener("click", function () {
+        if (button.classList.contains("selected")) {
+          button.classList.remove("selected");
+        } else {
+          if (button.value !== "All") {
+            roomButtons.forEach((btn) => {
+              if (btn.value === "All") {
+                btn.classList.remove("selected");
+              }
+            });
+          } else {
+            if (button.value === "All") {
+              roomButtons.forEach((btn) => {
+                btn.classList.remove("selected");
+              });
+            }
+          }
+          button.classList.add("selected");
+        }
+        setChartData(currentPeriod);
+      })
+    );
   }
 });
 
@@ -73,7 +90,7 @@ function showSection(section) {
 let energyChart;
 let currentPeriod = "day"; // Track the current time period
 
-// Define colors for different room datasets
+// Define colors for different room datasets (randomly assigned)
 const colors = [
   "rgba(75,192,192,1)",
   "rgba(255,99,132,1)",
@@ -103,18 +120,19 @@ function initEnergyChart() {
 
 //Used to select rooms for filtering chart data
 function getSelectedRoomsFromDropdown() {
-  const sel = document.getElementById("roomsSelect");
-  if (!sel) return [];
+  const roomsSelect = document.getElementById("roomsSelect");
+  if (!roomsSelect) return [];
 
-  const chosen = Array.from(sel.options)
-    .filter((opt) => opt.selected)
-    .map((opt) => opt.value);
+  const selectedButtons = roomsSelect.querySelectorAll(".roomLabel.selected");
+  const selectedRooms = Array.from(selectedButtons).map(
+    (button) => button.value
+  );
 
-  // Return all rooms
-  if (chosen.includes("All")) {
-    return ["101", "102", "103"];
+  // If "All" is selected, return all rooms
+  if (selectedRooms.includes("All")) {
+    return rooms_global;
   }
-  return chosen;
+  return selectedRooms.length ? selectedRooms : rooms_global;
 }
 
 // Outsource labels to this function so its easier to define chart labels
@@ -141,7 +159,18 @@ function generateLabels(period) {
   }
 }
 
-//Returns random data for each room
+//function that will be used to pull data from database for energy expenditure (currently generates random data)
+// TODO: when backend is integrated, adjust so filterValue is implemented
+function getEnergyData(period, filterValue, rooms) {
+  const labels = generateLabels(period);
+  const data = rooms.map((room) => ({
+    room: room,
+    data: generateRoomData(room, period), // Mock data for now
+  }));
+  return { labels, data };
+}
+
+//Returns random data for each room (TODO: Update for backend integration i.e not random)
 function generateRoomData(room, period) {
   const length = period === "day" ? 24 : period === "month" ? 30 : 12;
   const maxUsage = period === "day" ? 10 : period === "month" ? 300 : 2000;
@@ -151,42 +180,48 @@ function generateRoomData(room, period) {
 //sets the chart data with the correct corresponding type of chart
 function setChartData(period) {
   const selectedRooms = getSelectedRoomsFromDropdown();
+  //Get filter values based on the current period
+  let filterValue;
+  if (period === "day") {
+    filterValue = document.getElementById("dayInput").value;
+  } else if (period === "month") {
+    filterValue = document.getElementById("monthSelect").value;
+  } else if (period === "year") {
+    filterValue = parseInt(document.getElementById("yearSelect").value);
+  }
+
+  const { labels, data } = getEnergyData(period, filterValue, selectedRooms);
   const newType = period === "day" ? "line" : "bar";
   const ctx = document.getElementById("energyChart");
 
-  // Recreate chart if type changes
   if (!energyChart || energyChart.config.type !== newType) {
     if (energyChart) {
       energyChart.destroy();
     }
     energyChart = new Chart(ctx, {
       type: newType,
-      data: {
-        labels: [],
-        datasets: [],
-      },
+      data: { labels: labels, datasets: [] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          y: { beginAtZero: true },
-        },
+        scales: { y: { beginAtZero: true } },
       },
     });
+  } else {
+    energyChart.data.labels = labels;
+    energyChart.data.datasets = [];
   }
 
-  const labels = generateLabels(period);
-
-  // Generate datasets for each selected room
-  const roomDatasets = selectedRooms.map((room, index) => ({
-    label: `Room ${room}`,
-    data: generateRoomData(room, period),
+  // Create datasets from fetched data
+  const roomDatasets = data.map((roomData, index) => ({
+    label: `Room ${roomData.room}`,
+    data: roomData.data,
     borderColor: colors[index % colors.length],
     backgroundColor: colors[index % colors.length].replace("1)", "0.2)"),
     fill: newType === "line",
   }));
 
-  // Calculate total data for all rooms combined
+  // Calculate total data
   const totalData = labels.map((_, i) =>
     roomDatasets.reduce((sum, dataset) => sum + dataset.data[i], 0)
   );
@@ -199,8 +234,6 @@ function setChartData(period) {
     fill: false,
   };
 
-  // Update chart data
-  energyChart.data.labels = labels;
   energyChart.data.datasets = [...roomDatasets, totalDataset];
   energyChart.update();
 }
@@ -208,6 +241,23 @@ function setChartData(period) {
 /*******************************************
  * TIME PERIOD & FILTERS
  *******************************************/
+
+//function to populate room filter option with rooms available
+let rooms_global = [];
+function populateRooms() {
+  const roomsSelect = document.getElementById("roomsSelect");
+  const rooms = ["101", "102", "103", "104", "105"]; // Mock rooms
+  rooms_global = rooms;
+  roomsSelect.innerHTML =
+    '<button value="All" class="roomLabel selected">All Rooms</button>';
+  rooms.forEach((room) => {
+    const option = document.createElement("button");
+    option.value = room;
+    option.textContent = `Room ${room}`;
+    option.className = "roomLabel";
+    roomsSelect.appendChild(option);
+  });
+}
 
 const dayTab = document.getElementById("day-tab");
 const monthTab = document.getElementById("month-tab");

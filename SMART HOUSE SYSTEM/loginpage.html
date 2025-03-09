@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/js/apiClient.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
@@ -58,12 +59,21 @@
             text-align: center;
             font-weight: bold;
         }
+        #debugInfo {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1 style="text-align: center;">Login</h1>
     <form id="loginForm">
-        <label for="name">Name:</label>
+        <label for="name">Username:</label>
         <input type="text" id="name" name="name" required>
         
         <label for="password">Password:</label>
@@ -73,11 +83,22 @@
     </form>
 
     <div id="message"></div>
+    <div id="debugInfo"></div>
 
     <script>
         // Handle form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault(); // Prevent the form from refreshing the page
+
+            // Clear previous messages
+            const messageDiv = document.getElementById('message');
+            const debugInfo = document.getElementById('debugInfo');
+            messageDiv.textContent = "";
+            debugInfo.textContent = "";
+            
+            // Show loading message
+            messageDiv.textContent = 'Logging in...';
+            messageDiv.style.color = 'blue';
 
             // Get form data
             const formData = {
@@ -85,33 +106,64 @@
                 password: document.getElementById('password').value,
             };
 
-            const response = await fetch('/users/login', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(formData),
-});
- // Handle the response
- const result = await response.text(); // Get the response text
-            const messageDiv = document.getElementById('message');
-
-            if (response.ok && result === 'Sucadmin') {
-                messageDiv.textContent = 'Login successful!';
-                messageDiv.style.color = 'green';
-                window.location.href = '/admin';
-            } 
-
-            else if (response.ok && result === 'Success') {
-                messageDiv.textContent = 'Login successful!';
-                messageDiv.style.color = 'green';
-                window.location.href = '/app';
-
-            }
-            
-            else {
-                messageDiv.textContent = result || 'Login failed. Please check your credentials.';
+            try {
+                console.log('Sending login request:', formData.name);
+                
+                const response = await fetch('/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+                
+                // Get the response text
+                const result = await response.text();
+                
+                // Debug information
+                console.log('Response status:', response.status);
+                console.log('Response text:', result);
+                
+                // Show debug info (can be removed in production)
+                debugInfo.style.display = 'block';
+                debugInfo.innerHTML = `
+                    Response status: ${response.status}<br>
+                    Response text: "${result}"<br>
+                    Text length: ${result.length}<br>
+                    === "Sucadmin": ${result === 'Sucadmin'}<br>
+                    === "Success": ${result === 'Success'}<br>
+                `;
+                
+                // Handle the response
+                if (response.ok) {
+                    messageDiv.textContent = 'Login successful!';
+                    messageDiv.style.color = 'green';
+                    
+                    // Redirect based on response
+                    if (result.trim() === 'Sucadmin') {
+                        // Wait a moment to show the success message
+                        setTimeout(() => {
+                            window.location.href = '/admin';
+                        }, 1000);
+                    } else if (result.trim() === 'Success') {
+                        setTimeout(() => {
+                            window.location.href = '/app';
+                        }, 1000);
+                    } else {
+                        messageDiv.textContent = `Unexpected response: ${result}`;
+                        messageDiv.style.color = 'orange';
+                    }
+                } else {
+                    messageDiv.textContent = result || 'Login failed. Please check your credentials.';
+                    messageDiv.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                messageDiv.textContent = 'An error occurred during login.';
                 messageDiv.style.color = 'red';
+                
+                debugInfo.style.display = 'block';
+                debugInfo.textContent = 'Error: ' + error.message;
             }
         });
     </script>

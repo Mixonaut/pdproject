@@ -40,7 +40,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Auto-dismiss after 1.5 seconds
     setTimeout(() => {
       fallAlertMessage.classList.remove("show");
-    }, 5000);
+
+      setTimeout(() => {
+        fallAlertMessage.style.display = "none";//remove the alert
+  
+        //reshrink the modal
+        //TODO: add this to the fall alert
+        const modalBody = fallAlertMessage.closest(".modal-body");
+        modalBody.style.transition = "height 0.3s ease";
+        modalBody.style.height = `${modalBody.scrollHeight}px`; 
+        setTimeout(() => {
+          modalBody.style.height = "auto"; 
+        }, 10); 
+      }, 300); 
+    }, 5000); //
+    
   });
 
     // IT Alert Logic

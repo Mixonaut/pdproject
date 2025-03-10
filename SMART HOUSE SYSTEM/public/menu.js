@@ -40,9 +40,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // Auto-dismiss after 1.5 seconds
     setTimeout(() => {
       fallAlertMessage.classList.remove("show");
-    }, 1500);
+    }, 5000);
   });
+
+    // IT Alert Logic
+const itHelpButton = document.getElementById("itHelpButton");
+const itHelpmsg = document.getElementById("itHelpmsg");
+
+itHelpButton.addEventListener("click", () => {
+  itHelpmsg.style.display = "block";
+  itHelpmsg.classList.add("show");
+
+  
+  setTimeout(() => {
+    itHelpmsg.classList.remove("show");
+
+    setTimeout(() => {
+      itHelpmsg.style.display = "none";//remove the alert
+
+      //reshrink the modal
+      //TODO: add this to the fall alert
+      const modalBody = itHelpmsg.closest(".modal-body");
+      modalBody.style.transition = "height 0.3s ease";
+      modalBody.style.height = `${modalBody.scrollHeight}px`; 
+      setTimeout(() => {
+        modalBody.style.height = "auto"; 
+      }, 10); 
+    }, 300); 
+  }, 5000); //
 });
+
+
+
+});
+
+
 
 // thermometer buttons
 document.querySelectorAll(".plus-btn, .minus-btn").forEach((btn) => {

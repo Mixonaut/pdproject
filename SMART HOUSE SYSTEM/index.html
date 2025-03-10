@@ -325,7 +325,20 @@
             ></button>
           </div>
           <div class="modal-body">
-            <button type="button" class="btn modal-menu-button">Contact IT Support <i class="fa-solid fa-laptop"></i></button>
+            <div class="itSupContainer">
+              <button type="button" class="btn modal-menu-button" id="itHelpButton">Contact IT Support <i class="fa-solid fa-laptop"></i></button>
+             <div
+               class="alert alert-success fade mt-3"
+               id="itHelpmsg"
+               role="alert"
+               style="display: none"
+               >
+              <i class="fas fa-check-circle me-2"></i> IT professional is on their way
+             </div>
+            </div>
+
+            
+          </div>
             <button type="button" class="btn modal-menu-button">Account Settings <i class="fa-solid fa-user"></i></button>
             <button type="button" class="btn modal-menu-button">Accesibility <i class="fa-solid fa-eye"></i></button>
           </div>

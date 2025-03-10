@@ -12,6 +12,7 @@
   --border-contrast: #3f2e25;
   --bs-btn-hover-bg:var(--accent-color);
   --background: var(--interactive-highlight);
+  --bs-table-bg:var(--primary-color)!important;
 }
 
 body {
@@ -409,3 +410,8 @@ input:checked + .toggle-slider:before {
   background-color: var(--secondary-color);
   --background: var(--interactive-highlight);
 }
+
+.table{
+  bg-color:var(--accent-color)!important;
+}
+

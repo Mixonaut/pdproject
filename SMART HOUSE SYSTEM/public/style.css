@@ -1,3 +1,5 @@
+
+
 :root {
   --primary-color: #332215;
   --secondary-color: #80533b;
@@ -8,6 +10,8 @@
   --positive-feedback: #6b8e23;
   --interactive-highlight: #5c3926;
   --border-contrast: #3f2e25;
+  --bs-btn-hover-bg:var(--accent-color);
+  --background: var(--interactive-highlight);
 }
 
 body {
@@ -219,12 +223,12 @@ input:checked + .toggle-slider:before {
   transform: translateX(-50%);
   width: 70%;
   height: 50%;
-  background: linear-gradient(to top, #00b4d8, #0077b6);
+  background: linear-gradient(to top, --secondary-color var(--primary-color));
   border-radius: 15px 15px 0 0;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.temp-box-cold,
+.temp-box-cold, 
 .temp-box-warm,
 .temp-box-hot {
   padding: 8px 12px;
@@ -328,14 +332,14 @@ input:checked + .toggle-slider:before {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background-color: #007bff;
+  background-color: var(--secondary-color);
   color: white;
   font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
 }
 .room-button:hover {
-  background-color: #0056b3;
+  background-color: var(--secondary-color);
 }
 .room-grid {
   display: grid;
@@ -393,4 +397,15 @@ input:checked + .toggle-slider:before {
   background: #f8f9fa;
   border-radius: 10px;
   margin-bottom: 20px;
+}
+
+.btn-block {
+  width:100% !important;
+  border-color: var(--secondary-color);
+
+}
+
+.btn-block:hover {
+  background-color: var(--secondary-color);
+  --background: var(--interactive-highlight);
 }

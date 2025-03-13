@@ -101,6 +101,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Set up alert viewing
   document.getElementById("viewAlerts").addEventListener("click", viewAlerts);
+
+  // Add user management button listeners
+  document.getElementById("btnAddUser").addEventListener("click", addUser);
 });
 
 /*******************************************
@@ -896,18 +899,236 @@ async function fetchUsers() {
 }
 
 // Edit user function
-function editUser(userId) {
-  // This would open a modal to edit user details
-  console.log(`Edit user with ID: ${userId}`);
-  alert(`Edit functionality for user ${userId} would open here`);
+async function editUser(userId) {
+  try {
+    // Fetch user details
+    const users = await fetch("/users").then((res) => res.json());
+    const user = users.find((u) => u.user_id === parseInt(userId));
+
+    if (!user) {
+      alert("User not found");
+      return;
+    }
+
+    // Create and show edit modal
+    const modalHTML = `
+      <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form id="editUserForm">
+                <div class="mb-3">
+                  <label for="editUsername" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="editUsername" value="${
+                    user.username
+                  }" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="editEmail" value="${
+                    user.email || ""
+                  }">
+                </div>
+                <div class="mb-3">
+                  <label for="editRole" class="form-label">Role</label>
+                  <select class="form-select" id="editRole" required>
+                    <option value="1" ${
+                      user.role_name === "resident" ? "selected" : ""
+                    }>Resident</option>
+                    <option value="2" ${
+                      user.role_name === "staff" ? "selected" : ""
+                    }>Staff</option>
+                    <option value="3" ${
+                      user.role_name === "manager" ? "selected" : ""
+                    }>Manager</option>
+                    <option value="4" ${
+                      user.role_name === "admin" ? "selected" : ""
+                    }>Admin</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="saveUserEdit">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to document
+    const modalContainer = document.createElement("div");
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
+    modal.show();
+
+    // Handle save button click
+    document
+      .getElementById("saveUserEdit")
+      .addEventListener("click", async () => {
+        const username = document.getElementById("editUsername").value;
+        const email = document.getElementById("editEmail").value;
+        const roleId = document.getElementById("editRole").value;
+
+        try {
+          const response = await fetch(`/users/${userId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, email, roleId }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to update user");
+          }
+
+          // Close modal and refresh user list
+          modal.hide();
+          fetchUsers();
+        } catch (error) {
+          console.error("Error updating user:", error);
+          alert("Failed to update user. Please try again.");
+        }
+      });
+
+    // Remove modal from DOM when closed
+    document
+      .getElementById("editUserModal")
+      .addEventListener("hidden.bs.modal", function () {
+        document.body.removeChild(modalContainer);
+      });
+  } catch (error) {
+    console.error("Error editing user:", error);
+    alert("Error loading user details. Please try again.");
+  }
 }
 
 // Delete user function
-function deleteUser(userId) {
-  if (confirm(`Are you sure you want to delete user with ID: ${userId}?`)) {
-    console.log(`Delete user with ID: ${userId}`);
-    alert(`Delete functionality for user ${userId} would happen here`);
+async function deleteUser(userId) {
+  if (
+    confirm(
+      `Are you sure you want to delete this user? This action cannot be undone.`
+    )
+  ) {
+    try {
+      const response = await fetch(`/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete user");
+      }
+
+      // Refresh user list
+      fetchUsers();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user. Please try again.");
+    }
   }
+}
+
+// Add user function
+function addUser() {
+  const modalHTML = `
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add New User</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addUserForm">
+              <div class="mb-3">
+                <label for="newUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="newUsername" required>
+              </div>
+              <div class="mb-3">
+                <label for="newPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="newPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="newEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="newEmail">
+              </div>
+              <div class="mb-3">
+                <label for="newRole" class="form-label">Role</label>
+                <select class="form-select" id="newRole" required>
+                  <option value="1">Resident</option>
+                  <option value="2">Staff</option>
+                  <option value="3">Manager</option>
+                  <option value="4">Admin</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveNewUser">Add User</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add modal to document
+  const modalContainer = document.createElement("div");
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer);
+
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById("addUserModal"));
+  modal.show();
+
+  // Handle save button click
+  document.getElementById("saveNewUser").addEventListener("click", async () => {
+    const username = document.getElementById("newUsername").value;
+    const password = document.getElementById("newPassword").value;
+    const email = document.getElementById("newEmail").value;
+    const roleId = document.getElementById("newRole").value;
+
+    try {
+      const response = await fetch("/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: username,
+          password: password,
+          isAdmin: roleId === "4",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      // Close modal and refresh user list
+      modal.hide();
+      fetchUsers();
+    } catch (error) {
+      console.error("Error creating user:", error);
+      alert("Failed to create user. Please try again.");
+    }
+  });
+
+  // Remove modal from DOM when closed
+  document
+    .getElementById("addUserModal")
+    .addEventListener("hidden.bs.modal", function () {
+      document.body.removeChild(modalContainer);
+    });
 }
 
 /*******************************************

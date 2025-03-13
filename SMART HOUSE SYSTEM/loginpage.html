@@ -1,171 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <script src="/js/apiClient.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <script src="apiClient.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
     <link rel="stylesheet" href="style.css" />
     <style>
-        :root {
-          --primary-color: #332215;
-          --secondary-color: #80533b;
-          --accent-color: #7c5f45;
-          --background-color: #4a3429;
-          --surface-color: #415716;
-          --text-color: #e3d5c8;
-          --positive-feedback: #6b8e23;
-          --interactive-highlight: #5c3926;
-          --border-contrast: #3f2e25;
-        }
+      :root {
+        --primary-color: #332215;
+        --secondary-color: #80533b;
+        --accent-color: #7c5f45;
+        --background-color: #4a3429;
+        --surface-color: #415716;
+        --text-color: #e3d5c8;
+        --positive-feedback: #6b8e23;
+        --interactive-highlight: #5c3926;
+        --border-contrast: #3f2e25;
+      }
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-        }
-        form {
-            max-width: 300px;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        #message {
-            margin-top: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-        #debugInfo {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            display: none;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 50px;
+      }
+      form {
+        max-width: 300px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      #message {
+        margin-top: 20px;
+        text-align: center;
+        font-weight: bold;
+      }
+      #debugInfo {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-family: monospace;
+        display: none;
+      }
     </style>
-</head>
-<body>
-    <h1 style="text-align: center;">Login</h1>
+  </head>
+  <body>
+    <h1 style="text-align: center">Login</h1>
     <form id="loginForm">
-        <label for="name">Username:</label>
-        <input type="text" id="name" name="name" required>
-        
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        
-        <button type="submit">Login</button>
+      <label for="name">Username:</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">Login</button>
     </form>
 
     <div id="message"></div>
     <div id="debugInfo"></div>
 
     <script>
-        // Handle form submission
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Prevent the form from refreshing the page
+      // Handle form submission
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault(); // Prevent the form from refreshing the page
 
-            // Clear previous messages
-            const messageDiv = document.getElementById('message');
-            const debugInfo = document.getElementById('debugInfo');
-            messageDiv.textContent = "";
-            debugInfo.textContent = "";
-            
-            // Show loading message
-            messageDiv.textContent = 'Logging in...';
-            messageDiv.style.color = 'blue';
+          // Clear previous messages
+          const messageDiv = document.getElementById("message");
+          const debugInfo = document.getElementById("debugInfo");
+          messageDiv.textContent = "";
+          debugInfo.textContent = "";
 
-            // Get form data
-            const formData = {
-                name: document.getElementById('name').value,
-                password: document.getElementById('password').value,
-            };
+          // Show loading message
+          messageDiv.textContent = "Logging in...";
+          messageDiv.style.color = "blue";
 
-            try {
-                console.log('Sending login request:', formData.name);
-                
-                const response = await fetch('/users/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                });
-                
-                // Get the response text
-                const result = await response.text();
-                
-                // Debug information
-                console.log('Response status:', response.status);
-                console.log('Response text:', result);
-                
-                // Show debug info (can be removed in production)
-                debugInfo.style.display = 'block';
-                debugInfo.innerHTML = `
+          // Get form data
+          const formData = {
+            name: document.getElementById("name").value,
+            password: document.getElementById("password").value,
+          };
+
+          try {
+            console.log("Sending login request:", formData.name);
+
+            const response = await fetch("/users/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            // Get the response text
+            const result = await response.text();
+
+            // Debug information
+            console.log("Response status:", response.status);
+            console.log("Response text:", result);
+
+            // Show debug info (can be removed in production)
+            debugInfo.style.display = "block";
+            debugInfo.innerHTML = `
                     Response status: ${response.status}<br>
                     Response text: "${result}"<br>
                     Text length: ${result.length}<br>
-                    === "Sucadmin": ${result === 'Sucadmin'}<br>
-                    === "Success": ${result === 'Success'}<br>
+                    === "Sucadmin": ${result === "Sucadmin"}<br>
+                    === "Success": ${result === "Success"}<br>
                 `;
-                
-                // Handle the response
-                if (response.ok) {
-                    messageDiv.textContent = 'Login successful!';
-                    messageDiv.style.color = 'green';
-                    
-                    // Redirect based on response
-                    if (result.trim() === 'Sucadmin') {
-                        // Wait a moment to show the success message
-                        setTimeout(() => {
-                            window.location.href = '/admin';
-                        }, 1000);
-                    } else if (result.trim() === 'Success') {
-                        setTimeout(() => {
-                            window.location.href = '/app';
-                        }, 1000);
-                    } else {
-                        messageDiv.textContent = `Unexpected response: ${result}`;
-                        messageDiv.style.color = 'orange';
-                    }
-                } else {
-                    messageDiv.textContent = result || 'Login failed. Please check your credentials.';
-                    messageDiv.style.color = 'red';
-                }
-            } catch (error) {
-                console.error('Error during login:', error);
-                messageDiv.textContent = 'An error occurred during login.';
-                messageDiv.style.color = 'red';
-                
-                debugInfo.style.display = 'block';
-                debugInfo.textContent = 'Error: ' + error.message;
+
+            // Handle the response
+            if (response.ok) {
+              messageDiv.textContent = "Login successful!";
+              messageDiv.style.color = "green";
+
+              // Redirect based on response
+              if (result.trim() === "Sucadmin") {
+                // Wait a moment to show the success message
+                setTimeout(() => {
+                  window.location.href = "/admin";
+                }, 1000);
+              } else if (result.trim() === "Success") {
+                setTimeout(() => {
+                  window.location.href = "/app";
+                }, 1000);
+              } else {
+                messageDiv.textContent = `Unexpected response: ${result}`;
+                messageDiv.style.color = "orange";
+              }
+            } else {
+              messageDiv.textContent =
+                result || "Login failed. Please check your credentials.";
+              messageDiv.style.color = "red";
             }
+          } catch (error) {
+            console.error("Error during login:", error);
+            messageDiv.textContent = "An error occurred during login.";
+            messageDiv.style.color = "red";
+
+            debugInfo.style.display = "block";
+            debugInfo.textContent = "Error: " + error.message;
+          }
         });
     </script>
-</body>
+  </body>
 </html>

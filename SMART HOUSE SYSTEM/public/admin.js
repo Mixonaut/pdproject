@@ -571,22 +571,7 @@ async function refreshRoomGrid() {
 // View details for a specific room
 async function viewRoomDetails(roomId) {
   try {
-    // Show loading indicator
-    const loadingModal = new bootstrap.Modal(
-      document.getElementById("loadingModal")
-    );
-    loadingModal.show();
-
-    // Fetch devices for the room
-    const devices = await smartHomeApi.devices.getByRoom(roomId);
-
-    // Fetch users assigned to this room
-    const users = await smartHomeApi.userRooms.getUsersByRoom(roomId);
-
-    // Hide loading modal
-    loadingModal.hide();
-
-    // Create and show a modal with the device status
+    // Create and show the modal first with loading state
     const modalHTML = `
       <div class="modal fade" id="roomDetailModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -596,92 +581,12 @@ async function viewRoomDetails(roomId) {
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-              <!-- Residents Tab -->
-              <div class="mb-4">
-                <h6>Assigned Residents</h6>
-                <div class="table-responsive">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Email</th>
-                        <th>Assigned Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${
-                        users.length
-                          ? users
-                              .map(
-                                (user) => `
-                        <tr>
-                          <td>${user.username}</td>
-                          <td>${user.role_name}</td>
-                          <td>${user.email || "N/A"}</td>
-                          <td>${new Date(
-                            user.assigned_date
-                          ).toLocaleString()}</td>
-                        </tr>
-                      `
-                              )
-                              .join("")
-                          : '<tr><td colspan="4" class="text-center">No residents assigned to this room</td></tr>'
-                      }
-                    </tbody>
-                  </table>
+              <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading room details...</span>
                 </div>
-                <button class="btn btn-success" id="assignResidentBtn">Assign Resident</button>
+                <p class="mt-2">Loading room details...</p>
               </div>
-              
-              <!-- Devices Tab -->
-              <h6>Devices</h6>
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Device</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Last Updated</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${devices
-                      .map(
-                        (device) => `
-                      <tr>
-                        <td>${device.device_name}</td>
-                        <td>${device.device_type}</td>
-                        <td>${device.status || "Unknown"}</td>
-                        <td>${
-                          device.last_updated
-                            ? new Date(device.last_updated).toLocaleString()
-                            : "N/A"
-                        }</td>
-                        <td>
-                          <button class="btn btn-sm btn-primary toggle-device" 
-                                  data-device-id="${device.device_id}" 
-                                  data-current-status="${
-                                    device.status || "off"
-                                  }">
-                            Toggle
-                          </button>
-                        </td>
-                      </tr>
-                    `
-                      )
-                      .join("")}
-                  </tbody>
-                </table>
-              </div>
-              <div class="mt-3">
-                <button class="btn btn-success" id="addDeviceBtn">Add Device</button>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
           </div>
         </div>
@@ -698,6 +603,103 @@ async function viewRoomDetails(roomId) {
       document.getElementById("roomDetailModal")
     );
     modal.show();
+
+    // Fetch data
+    const [devices, users] = await Promise.all([
+      smartHomeApi.devices.getByRoom(roomId),
+      smartHomeApi.userRooms.getUsersByRoom(roomId),
+    ]);
+
+    // Update modal content with the fetched data
+    const modalBody = document.querySelector("#roomDetailModal .modal-body");
+    modalBody.innerHTML = `
+      <!-- Residents Tab -->
+      <div class="mb-4">
+        <h6>Assigned Residents</h6>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Assigned Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                users.length
+                  ? users
+                      .map(
+                        (user) => `
+                  <tr>
+                    <td>${user.username}</td>
+                    <td>${user.role_name}</td>
+                    <td>${user.email || "N/A"}</td>
+                    <td>${new Date(user.assigned_date).toLocaleString()}</td>
+                  </tr>
+                `
+                      )
+                      .join("")
+                  : '<tr><td colspan="4" class="text-center">No residents assigned to this room</td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-success" id="assignResidentBtn">Assign Resident</button>
+      </div>
+      
+      <!-- Devices Tab -->
+      <h6>Devices</h6>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${devices
+              .map(
+                (device) => `
+              <tr>
+                <td>${device.device_name}</td>
+                <td>${device.device_type}</td>
+                <td>${device.status || "Unknown"}</td>
+                <td>${
+                  device.last_updated
+                    ? new Date(device.last_updated).toLocaleString()
+                    : "N/A"
+                }</td>
+                <td>
+                  <div class="btn-group">
+                    <button class="btn btn-sm btn-primary toggle-device" 
+                            data-device-id="${device.device_id}" 
+                            data-current-status="${device.status || "off"}">
+                      Toggle
+                    </button>
+                    <button class="btn btn-sm btn-danger remove-device"
+                            data-device-id="${device.device_id}"
+                            data-device-name="${device.device_name}">
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3">
+        <button class="btn btn-success" id="addDeviceBtn">Add Device</button>
+      </div>
+    `;
 
     // Add event listeners to toggle buttons
     document.querySelectorAll(".toggle-device").forEach((button) => {
@@ -737,6 +739,38 @@ async function viewRoomDetails(roomId) {
       });
     });
 
+    // Add event listeners to remove buttons
+    document.querySelectorAll(".remove-device").forEach((button) => {
+      button.addEventListener("click", async function () {
+        const deviceId = this.dataset.deviceId;
+        const deviceName = this.dataset.deviceName;
+
+        if (
+          confirm(
+            `Are you sure you want to remove ${deviceName}? This action cannot be undone.`
+          )
+        ) {
+          try {
+            // Show loading spinner on the button
+            this.innerHTML =
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Removing...';
+            this.disabled = true;
+
+            // Remove the device via API
+            await smartHomeApi.devices.remove(deviceId);
+
+            // Remove the row from the table
+            this.closest("tr").remove();
+          } catch (error) {
+            console.error("Error removing device:", error);
+            this.innerHTML = "Remove";
+            this.disabled = false;
+            alert("Error removing device. Please try again.");
+          }
+        }
+      });
+    });
+
     // Add device button handler
     document.getElementById("addDeviceBtn").addEventListener("click", () => {
       showAddDeviceForm(roomId, modal);
@@ -758,6 +792,127 @@ async function viewRoomDetails(roomId) {
   } catch (error) {
     console.error("Error fetching room details:", error);
     alert("Error loading room details. Please try again.");
+  }
+}
+
+// Function to update the device list table
+async function updateDeviceList(roomId) {
+  try {
+    // Get the table body
+    const deviceTableBody = document.querySelector(
+      "#roomDetailModal .table tbody"
+    );
+    if (!deviceTableBody) return;
+
+    // Show loading state
+    deviceTableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading devices...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+
+    // Fetch updated device list
+    const devices = await smartHomeApi.devices.getByRoom(roomId);
+
+    // Update the table with new data
+    deviceTableBody.innerHTML = devices
+      .map(
+        (device) => `
+      <tr>
+        <td>${device.device_name}</td>
+        <td>${device.device_type}</td>
+        <td>${device.status || "Unknown"}</td>
+        <td>${
+          device.last_updated
+            ? new Date(device.last_updated).toLocaleString()
+            : "N/A"
+        }</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary toggle-device" 
+                    data-device-id="${device.device_id}" 
+                    data-current-status="${device.status || "off"}">
+              Toggle
+            </button>
+            <button class="btn btn-sm btn-danger remove-device"
+                    data-device-id="${device.device_id}"
+                    data-device-name="${device.device_name}">
+              Remove
+            </button>
+          </div>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+
+    // Re-attach event listeners to the new buttons
+    deviceTableBody.querySelectorAll(".toggle-device").forEach((button) => {
+      button.addEventListener("click", async function () {
+        const deviceId = this.dataset.deviceId;
+        const currentStatus = this.dataset.currentStatus;
+        const newStatus = currentStatus === "on" ? "off" : "on";
+
+        try {
+          this.innerHTML =
+            '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+          this.disabled = true;
+
+          await smartHomeApi.devices.updateStatus(deviceId, newStatus);
+
+          this.dataset.currentStatus = newStatus;
+          this.innerHTML = "Toggle";
+          this.disabled = false;
+
+          const statusCell =
+            this.closest("tr").querySelector("td:nth-child(3)");
+          statusCell.textContent = newStatus;
+
+          const timestampCell =
+            this.closest("tr").querySelector("td:nth-child(4)");
+          timestampCell.textContent = new Date().toLocaleString();
+        } catch (error) {
+          console.error("Error toggling device status:", error);
+          this.innerHTML = "Toggle";
+          this.disabled = false;
+          alert("Error updating device status. Please try again.");
+        }
+      });
+    });
+
+    deviceTableBody.querySelectorAll(".remove-device").forEach((button) => {
+      button.addEventListener("click", async function () {
+        const deviceId = this.dataset.deviceId;
+        const deviceName = this.dataset.deviceName;
+
+        if (
+          confirm(
+            `Are you sure you want to remove ${deviceName}? This action cannot be undone.`
+          )
+        ) {
+          try {
+            this.innerHTML =
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Removing...';
+            this.disabled = true;
+
+            await smartHomeApi.devices.remove(deviceId);
+            this.closest("tr").remove();
+          } catch (error) {
+            console.error("Error removing device:", error);
+            this.innerHTML = "Remove";
+            this.disabled = false;
+            alert("Error removing device. Please try again.");
+          }
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error updating device list:", error);
+    alert("Error updating device list. Please try again.");
   }
 }
 
@@ -837,11 +992,13 @@ function showAddDeviceForm(roomId, parentModal) {
         // Hide the modal
         modal.hide();
 
-        // Show success message
-        alert("Device added successfully.");
+        // Show the parent modal again
+        if (parentModal) {
+          parentModal.show();
+        }
 
-        // Reopen the room details modal
-        viewRoomDetails(roomId);
+        // Update the device list
+        await updateDeviceList(roomId);
       } catch (error) {
         console.error("Error adding device:", error);
         alert("Error adding device. Please try again.");

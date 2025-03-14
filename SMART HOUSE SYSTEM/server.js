@@ -14,6 +14,17 @@ const userRoomService = require("./userRoomService");
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Session middleware (if not already present)
+const session = require("express-session");
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === "production" },
+  })
+);
+
 // Initialize database and create default users
 async function initializeApp() {
   try {
@@ -46,14 +57,33 @@ app.post("/users/login", async (req, res) => {
 
     if (result.success) {
       console.log(`User ${name} logged in successfully as ${result.role}`);
-      res.send(result.message);
+      // Store user data in session
+      req.session.userId = result.user_id;
+      req.session.role = result.role;
+
+      // Return user data along with redirect URL
+      res.json({
+        success: true,
+        user: {
+          user_id: result.user_id,
+          username: name,
+          role: result.role,
+        },
+        redirectUrl: result.role === "admin" ? "/admin" : "/app",
+      });
     } else {
       console.log(`Login failed for user: ${name}`);
-      res.status(400).send(result.message);
+      res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
     }
   } catch (error) {
     console.error("Server error during login:", error);
-    res.status(500).send("Server error");
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
@@ -331,95 +361,49 @@ app.get("/api/rooms-with-users", async (req, res) => {
 
 app.get("/api/users/:userId/room", async (req, res) => {
   try {
-    const { userId } = req.params;
-    const room = await userRoomService.getUserRoom(userId);
-    
-    if (room) {
-      res.json(room);
-    } else {
-      res.status(404).json({ message: "No room assigned to this user" });
+    const room = await userRoomService.getUserRoom(req.params.userId);
+    if (!room) {
+      return res.status(404).json({ error: "No room assigned to user" });
     }
+    res.json(room);
   } catch (error) {
-    console.error(`Error fetching room for user ${userId}:`, error);
-    res.status(500).json({ error: "Failed to fetch user's room" });
+    console.error("Error getting user's room:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 app.get("/api/rooms/:roomId/users", async (req, res) => {
   try {
-    const { roomId } = req.params;
-    const users = await userRoomService.getUsersByRoom(roomId);
+    const users = await userRoomService.getUsersByRoom(req.params.roomId);
     res.json(users);
   } catch (error) {
-    console.error(`Error fetching users for room ${roomId}:`, error);
-    res.status(500).json({ error: "Failed to fetch room's users" });
+    console.error("Error getting room's users:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 app.post("/api/users/:userId/room", async (req, res) => {
   try {
-    const { userId } = req.params;
     const { roomId } = req.body;
-    
     if (!roomId) {
       return res.status(400).json({ error: "Room ID is required" });
     }
-    
-    // Check if the room exists
-    const roomCheck = await db.query(
-      "SELECT room_id FROM rooms WHERE room_id = ?", 
-      [roomId]
-    );
-    
-    if (roomCheck.length === 0) {
-      return res.status(404).json({ error: "Room not found" });
-    }
-    
-    // Check if the user exists
-    const userCheck = await db.query(
-      "SELECT user_id FROM users WHERE user_id = ?", 
-      [userId]
-    );
-    
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    
-    // Check if the room has availability
-    const isAvailable = await userRoomService.checkRoomAvailability(roomId);
-    if (!isAvailable) {
-      return res.status(400).json({ error: "Room is already at capacity" });
-    }
-    
-    // Assign the room
-    const success = await userRoomService.assignRoom(userId, roomId);
-    
-    if (success) {
-      res.status(201).json({ 
-        message: "Room assigned successfully" 
-      });
-    } else {
-      res.status(500).json({ error: "Failed to assign room" });
-    }
+
+    await userRoomService.assignRoom(req.params.userId, roomId);
+    res.json({ message: "Room assigned successfully" });
   } catch (error) {
-    console.error(`Error assigning room to user ${userId}:`, error);
-    res.status(500).json({ error: "Failed to assign room" });
+    console.error("Error assigning room to user:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 app.delete("/api/users/:userId/room", async (req, res) => {
   try {
-    const { userId } = req.params;
-    const result = await userRoomService.removeAssignment(userId);
-    
-    if (result) {
-      res.json({ message: "Room assignment removed successfully" });
-    } else {
-      res.status(404).json({ message: "No active room assignment found for this user" });
-    }
+    await userRoomService.removeAssignment(req.params.userId);
+    res.json({ message: "Room assignment removed successfully" });
   } catch (error) {
-    console.error(`Error removing room assignment for user ${userId}:`, error);
-    res.status(500).json({ error: "Failed to remove room assignment" });
+    console.error("Error removing room assignment:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -471,6 +455,44 @@ app.get("/app", (req, res) => {
 
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "admin.html"));
+});
+
+// Get current logged in user
+app.get("/api/users/current", async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    const sql = `
+      SELECT u.user_id, u.username, u.email, r.role_name 
+      FROM users u
+      JOIN roles r ON u.role_id = r.role_id
+      WHERE u.user_id = ?
+    `;
+
+    const users = await db.query(sql, [req.session.userId]);
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(users[0]);
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get all rooms with their users
+app.get("/api/rooms/with-users", async (req, res) => {
+  try {
+    const roomsWithUsers = await userRoomService.getRoomsWithUsers();
+    res.json(roomsWithUsers);
+  } catch (error) {
+    console.error("Error getting rooms with users:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Start the server

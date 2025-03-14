@@ -54,7 +54,10 @@ async function loginUser(username, password) {
     const users = await db.query(sql, [username]);
 
     if (users.length === 0) {
-      return { success: false, message: "Cannot find user" };
+      return {
+        success: false,
+        message: "Cannot find user",
+      };
     }
 
     const user = users[0];
@@ -63,24 +66,17 @@ async function loginUser(username, password) {
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (match) {
-      // Return different responses based on role
-      if (user.role_name === "admin" || user.role_name === "manager") {
-        return {
-          success: true,
-          message: "Sucadmin",
-          user_id: user.user_id,
-          role: user.role_name,
-        };
-      } else {
-        return {
-          success: true,
-          message: "Success",
-          user_id: user.user_id,
-          role: user.role_name,
-        };
-      }
+      return {
+        success: true,
+        message: "Login successful",
+        user_id: user.user_id,
+        role: user.role_name,
+      };
     } else {
-      return { success: false, message: "Not Allowed" };
+      return {
+        success: false,
+        message: "Invalid password",
+      };
     }
   } catch (error) {
     console.error("Error logging in user:", error);

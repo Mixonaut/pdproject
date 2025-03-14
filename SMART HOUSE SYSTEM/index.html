@@ -125,100 +125,76 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-sliders-h me-2"></i>Room Controls
             </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
+            <!-- Loading Spinner -->
+            <div id="deviceLoadingSpinner" class="text-center my-3" style="display: none;">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading devices...</span>
+              </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="deviceLoadError" class="alert alert-danger" style="display: none;">
+              Error loading devices. Please try again later.
+            </div>
+
             <!-- MAIN MENU -->
             <div class="main-menu text-center">
-              <button
-                class="btn modal-menu-button"
-                data-target="lights-control"
-              >
+              <button class="btn modal-menu-button" data-target="lights-control">
                 <i class="fas fa-lightbulb"></i> Lights
               </button>
-              <button
-                class="btn modal-menu-button"
-                data-target="shutters-control"
-              >
+              <button class="btn modal-menu-button" data-target="shutters-control">
                 <i class="fas fa-blinds"></i> Shutters
               </button>
-              <button
-                class="btn modal-menu-button"
-                data-target="climate-control"
-              >
+              <button class="btn modal-menu-button" data-target="climate-control">
                 <i class="fas fa-fan"></i> Climate
+              </button>
+              <button class="btn modal-menu-button" data-target="other-control">
+                <i class="fas fa-ellipsis-h"></i> Other Devices
               </button>
             </div>
 
             <!-- SUBMENUS -->
-            <div id="lights-control" class="sub-menu">
+            <!-- Lights Control -->
+            <div id="lights-control" class="sub-menu" style="display: none;">
               <div class="toggle-container">
-                <div class="toggle-item">
-                  <span>Bedroom Lights</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <div class="toggle-item">
-                  <span>Living Room Lights</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <button class="btn btn-back btn-lg w-100 mt-3">
-                  <i class="fas fa-arrow-left me-2"></i>Back
-                </button>
+                <!-- Dynamic light devices will be loaded here -->
               </div>
+              <button class="btn btn-back btn-lg w-100 mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </button>
             </div>
 
-            <div id="shutters-control" class="sub-menu">
+            <!-- Shutters Control -->
+            <div id="shutters-control" class="sub-menu" style="display: none;">
               <div class="toggle-container">
-                <div class="toggle-item">
-                  <span>Bedroom Shutters</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <div class="toggle-item">
-                  <span>Living Room Shutters</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <button class="btn btn-back btn-lg w-100 mt-3">
-                  <i class="fas fa-arrow-left me-2"></i>Back
-                </button>
+                <!-- Dynamic shutter devices will be loaded here -->
               </div>
+              <button class="btn btn-back btn-lg w-100 mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </button>
             </div>
 
-            <div id="climate-control" class="sub-menu">
+            <!-- Climate Control -->
+            <div id="climate-control" class="sub-menu" style="display: none;">
               <div class="toggle-container">
-                <div class="toggle-item">
-                  <span>Air Conditioning</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <div class="toggle-item">
-                  <span>Heating System</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-                <button class="btn btn-back btn-lg w-100 mt-3">
-                  <i class="fas fa-arrow-left me-2"></i>Back
-                </button>
+                <!-- Dynamic climate devices will be loaded here -->
               </div>
+              <button class="btn btn-back btn-lg w-100 mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </button>
+            </div>
+
+            <!-- Other Devices Control -->
+            <div id="other-control" class="sub-menu" style="display: none;">
+              <div class="toggle-container">
+                <!-- Dynamic other devices will be loaded here -->
+              </div>
+              <button class="btn btn-back btn-lg w-100 mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </button>
             </div>
           </div>
         </div>

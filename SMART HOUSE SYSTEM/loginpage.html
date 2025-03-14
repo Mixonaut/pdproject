@@ -119,45 +119,34 @@
               body: JSON.stringify(formData),
             });
 
-            // Get the response text
-            const result = await response.text();
+            // Get the response as JSON
+            const result = await response.json();
 
             // Debug information
             console.log("Response status:", response.status);
-            console.log("Response text:", result);
+            console.log("Response data:", result);
 
             // Show debug info (can be removed in production)
             debugInfo.style.display = "block";
             debugInfo.innerHTML = `
-                    Response status: ${response.status}<br>
-                    Response text: "${result}"<br>
-                    Text length: ${result.length}<br>
-                    === "Sucadmin": ${result === "Sucadmin"}<br>
-                    === "Success": ${result === "Success"}<br>
-                `;
+            Response status: ${response.status}<br>
+            Success: ${result.success}<br>
+            Role: ${result.user?.role || "N/A"}<br>
+          `;
 
             // Handle the response
-            if (response.ok) {
+            if (response.ok && result.success) {
               messageDiv.textContent = "Login successful!";
               messageDiv.style.color = "green";
 
-              // Redirect based on response
-              if (result.trim() === "Sucadmin") {
-                // Wait a moment to show the success message
-                setTimeout(() => {
-                  window.location.href = "/admin";
-                }, 1000);
-              } else if (result.trim() === "Success") {
-                setTimeout(() => {
-                  window.location.href = "/app";
-                }, 1000);
-              } else {
-                messageDiv.textContent = `Unexpected response: ${result}`;
-                messageDiv.style.color = "orange";
-              }
+              // Wait a moment to show the success message, then redirect
+              setTimeout(() => {
+                window.location.href = result.redirectUrl;
+              }, 1000);
             } else {
               messageDiv.textContent =
-                result || "Login failed. Please check your credentials.";
+                result.message ||
+                "Login failed. Please check your credentials.";
               messageDiv.style.color = "red";
             }
           } catch (error) {

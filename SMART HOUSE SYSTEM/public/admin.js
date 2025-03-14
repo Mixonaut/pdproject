@@ -104,6 +104,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Add user management button listeners
   document.getElementById("btnAddUser").addEventListener("click", addUser);
+  document.getElementById("btnEditUser").addEventListener("click", function() {
+    alert("Please select a user from the list to edit.");
+  });
+  document.getElementById("btnRemoveUser").addEventListener("click", function() {
+    alert("Please select a user from the list to delete.");
+  });
 });
 
 /*******************************************
@@ -129,7 +135,7 @@ function showSection(section) {
     updateEnergySummary(); // Refresh data when showing analytics
   } else if (section === "rooms") {
     sectionRooms.classList.remove("d-none");
-    refreshRoomGrid(); // Refresh room grid when viewing this section
+    showRoomAssignments(); // Show room assignments when viewing rooms section
   } else if (section === "users") {
     sectionUsers.classList.remove("d-none");
     fetchUsers(); // Fetch users when viewing this section
@@ -569,6 +575,9 @@ async function viewRoomDetails(roomId) {
 
     // Fetch devices for the room
     const devices = await smartHomeApi.devices.getByRoom(roomId);
+    
+    // Fetch users assigned to this room
+    const users = await smartHomeApi.userRooms.getUsersByRoom(roomId);
 
     // Hide loading modal
     loadingModal.hide();
@@ -583,6 +592,35 @@ async function viewRoomDetails(roomId) {
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+              <!-- Residents Tab -->
+              <div class="mb-4">
+                <h6>Assigned Residents</h6>
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Assigned Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${users.length ? users.map(user => `
+                        <tr>
+                          <td>${user.username}</td>
+                          <td>${user.role_name}</td>
+                          <td>${user.email || 'N/A'}</td>
+                          <td>${new Date(user.assigned_date).toLocaleString()}</td>
+                        </tr>
+                      `).join('') : '<tr><td colspan="4" class="text-center">No residents assigned to this room</td></tr>'}
+                    </tbody>
+                  </table>
+                </div>
+                <button class="btn btn-success" id="assignResidentBtn">Assign Resident</button>
+              </div>
+              
+              <!-- Devices Tab -->
               <h6>Devices</h6>
               <div class="table-responsive">
                 <table class="table">
@@ -688,6 +726,11 @@ async function viewRoomDetails(roomId) {
     // Add device button handler
     document.getElementById("addDeviceBtn").addEventListener("click", () => {
       showAddDeviceForm(roomId, modal);
+    });
+    
+    // Assign resident button handler
+    document.getElementById("assignResidentBtn").addEventListener("click", () => {
+      showAssignResidentForm(roomId, modal);
     });
 
     // Remove the modal from DOM when it's closed
@@ -806,6 +849,494 @@ function showAddDeviceForm(roomId, parentModal) {
     });
 }
 
+// Show form to assign a resident to a room
+async function showAssignResidentForm(roomId, parentModal) {
+  // Hide the parent modal
+  if (parentModal) {
+    parentModal.hide();
+  }
+  
+  // Fetch all users with resident role
+  let residents = [];
+  try {
+    const allUsers = await fetch('/users').then(res => res.json());
+    residents = allUsers.filter(user => user.role_name === 'resident');
+  } catch (error) {
+    console.error('Error fetching residents:', error);
+    residents = [];
+  }
+  
+  // Create and show the assign resident modal
+  const assignResidentHTML = `
+    <div class="modal fade" id="assignResidentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Assign Resident to Room</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="assignResidentForm">
+              <div class="mb-3">
+                <label for="residentSelect" class="form-label">Select Resident</label>
+                <select class="form-select" id="residentSelect" required>
+                  <option value="">-- Select a Resident --</option>
+                  ${residents.map(resident => `
+                    <option value="${resident.user_id}">${resident.username}</option>
+                  `).join('')}
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="submitAssignResident">Assign to Room</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add the modal to the document
+  const modalContainer = document.createElement("div");
+  modalContainer.innerHTML = assignResidentHTML;
+  document.body.appendChild(modalContainer);
+
+  // Show the modal
+  const modal = new bootstrap.Modal(document.getElementById("assignResidentModal"));
+  modal.show();
+
+  // Add event listener to submit button
+  document.getElementById("submitAssignResident").addEventListener("click", async () => {
+    const userId = document.getElementById("residentSelect").value;
+
+    if (!userId) {
+      alert("Please select a resident.");
+      return;
+    }
+
+    try {
+      // Show loading state
+      const submitBtn = document.getElementById("submitAssignResident");
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Assigning...';
+      submitBtn.disabled = true;
+
+      // Assign the resident to the room via API
+      await smartHomeApi.userRooms.assignRoom(userId, roomId);
+
+      // Hide the modal
+      modal.hide();
+
+      // Show success message
+      alert("Resident assigned to room successfully.");
+
+      // Reopen the room details modal
+      viewRoomDetails(roomId);
+    } catch (error) {
+      console.error("Error assigning resident:", error);
+      alert(`Error assigning resident: ${error.message}`);
+
+      // Reset button
+      submitBtn.innerHTML = "Assign to Room";
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Remove the modal from DOM when it's closed
+  document.getElementById("assignResidentModal").addEventListener("hidden.bs.modal", function () {
+    document.body.removeChild(modalContainer);
+
+    // Reopen the parent modal if it was closed
+    if (parentModal) {
+      parentModal.show();
+    }
+  });
+}
+
+/*******************************************
+ * USER-ROOM ASSIGNMENT MANAGEMENT
+ *******************************************/
+
+// Fetch a user's current room assignment
+async function getUserRoom(userId) {
+  try {
+    return await smartHomeApi.userRooms.getUserRoom(userId);
+  } catch (error) {
+    console.error(`Error fetching room for user ${userId}:`, error);
+    return null;
+  }
+}
+
+// Enhanced edit user function with room assignment
+async function editUser(userId) {
+  try {
+    // Show loading modal
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    // Fetch user details
+    const users = await fetch('/users').then(res => res.json());
+    const user = users.find(u => u.user_id === parseInt(userId));
+    
+    if (!user) {
+      loadingModal.hide();
+      alert('User not found');
+      return;
+    }
+    
+    // Fetch available rooms
+    const rooms = await smartHomeApi.rooms.getAll();
+    
+    // Fetch user's current room
+    const currentRoom = await getUserRoom(userId);
+    
+    // Hide loading modal
+    loadingModal.hide();
+    
+    // Only show room assignment for residents
+    const isResident = user.role_name === 'resident';
+    
+    // Create and show edit modal
+    const modalHTML = `
+      <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form id="editUserForm">
+                <div class="mb-3">
+                  <label for="editUsername" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="editUsername" value="${user.username}" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="editEmail" value="${user.email || ''}">
+                </div>
+                <div class="mb-3">
+                  <label for="editRole" class="form-label">Role</label>
+                  <select class="form-select" id="editRole" required>
+                    <option value="1" ${user.role_name === 'resident' ? 'selected' : ''}>Resident</option>
+                    <option value="2" ${user.role_name === 'staff' ? 'selected' : ''}>Staff</option>
+                    <option value="3" ${user.role_name === 'manager' ? 'selected' : ''}>Manager</option>
+                    <option value="4" ${user.role_name === 'admin' ? 'selected' : ''}>Admin</option>
+                  </select>
+                </div>
+                
+                <div id="roomAssignmentSection" class="mb-3 ${isResident ? '' : 'd-none'}">
+                  <label for="assignedRoom" class="form-label">Assigned Room</label>
+                  <select class="form-select" id="assignedRoom">
+                    <option value="">-- No Room Assigned --</option>
+                    ${rooms.map(room => `
+                      <option value="${room.room_id}" ${currentRoom && currentRoom.room_id === room.room_id ? 'selected' : ''}>
+                        Room ${room.room_number} - ${room.description || ''}
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="saveUserEdit">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to document
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    modal.show();
+    
+    // Show/hide room assignment based on role
+    document.getElementById('editRole').addEventListener('change', function() {
+      const isResident = this.value === '1';
+      document.getElementById('roomAssignmentSection').classList.toggle('d-none', !isResident);
+    });
+
+    // Handle save button click
+    document.getElementById('saveUserEdit').addEventListener('click', async () => {
+      const username = document.getElementById('editUsername').value;
+      const email = document.getElementById('editEmail').value;
+      const roleId = document.getElementById('editRole').value;
+      const roomId = document.getElementById('assignedRoom').value;
+      
+      try {
+        // Update the user info
+        const response = await fetch(`/users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, email, roleId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update user');
+        }
+        
+        // If the user is a resident, handle room assignment
+        if (roleId === '1') {
+          if (roomId) {
+            // Assign the room
+            await smartHomeApi.userRooms.assignRoom(userId, roomId);
+          } else {
+            // Remove assignment if "No Room" was selected
+            await smartHomeApi.userRooms.removeAssignment(userId);
+          }
+        }
+
+        // Close modal and refresh user list
+        modal.hide();
+        fetchUsers();
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Failed to update user: ' + error.message);
+      }
+    });
+
+    // Remove modal from DOM when closed
+    document.getElementById('editUserModal').addEventListener('hidden.bs.modal', function() {
+      document.body.removeChild(modalContainer);
+    });
+  } catch (error) {
+    console.error('Error editing user:', error);
+    alert('Error loading user details. Please try again.');
+  }
+}
+
+// Enhanced add user function with room assignment
+function addUser() {
+  // Fetch rooms first
+  smartHomeApi.rooms.getAll().then(rooms => {
+    const modalHTML = `
+      <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Add New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form id="addUserForm">
+                <div class="mb-3">
+                  <label for="newUsername" class="form-label">Username</label>
+                  <input type="text" class="form-control" id="newUsername" required>
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" class="form-label">Password</label>
+                  <input type="password" class="form-control" id="newPassword" required>
+                </div>
+                <div class="mb-3">
+                  <label for="newEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="newEmail">
+                </div>
+                <div class="mb-3">
+                  <label for="newRole" class="form-label">Role</label>
+                  <select class="form-select" id="newRole" required>
+                    <option value="1">Resident</option>
+                    <option value="2">Staff</option>
+                    <option value="3">Manager</option>
+                    <option value="4">Admin</option>
+                  </select>
+                </div>
+                <div id="newRoomAssignmentSection" class="mb-3">
+                  <label for="newAssignedRoom" class="form-label">Assigned Room</label>
+                  <select class="form-select" id="newAssignedRoom">
+                    <option value="">-- No Room Assigned --</option>
+                    ${rooms.map(room => `
+                      <option value="${room.room_id}">
+                        Room ${room.room_number} - ${room.description || ''}
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="saveNewUser">Add User</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to document
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+    modal.show();
+    
+    // Show/hide room assignment based on role
+    document.getElementById('newRole').addEventListener('change', function() {
+      const isResident = this.value === '1';
+      document.getElementById('newRoomAssignmentSection').classList.toggle('d-none', !isResident);
+    });
+
+    // Handle save button click
+    document.getElementById('saveNewUser').addEventListener('click', async () => {
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      const email = document.getElementById('newEmail').value;
+      const roleId = document.getElementById('newRole').value;
+      const roomId = document.getElementById('newAssignedRoom').value;
+
+      try {
+        // Create user first
+        const response = await fetch('/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: username,
+            password: password,
+            isAdmin: roleId === '4',
+            email: email
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create user');
+        }
+        
+        const result = await response.json();
+        const userId = result.userId;
+        
+        // If the user is a resident and a room was selected, assign it
+        if (roleId === '1' && roomId) {
+          await smartHomeApi.userRooms.assignRoom(userId, roomId);
+        }
+
+        // Close modal and refresh user list
+        modal.hide();
+        fetchUsers();
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Failed to create user: ' + error.message);
+      }
+    });
+
+    // Remove modal from DOM when closed
+    document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
+      document.body.removeChild(modalContainer);
+    });
+  }).catch(error => {
+    console.error('Error fetching rooms:', error);
+    alert('Could not load available rooms. Please try again.');
+  });
+}
+
+// Enhanced delete user function
+async function deleteUser(userId) {
+  if (confirm(`Are you sure you want to delete this user? This action cannot be undone.`)) {
+    try {
+      // We don't need to worry about the room assignment as it will be deleted cascade
+      const response = await fetch(`/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      // Refresh user list
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user. Please try again.');
+    }
+  }
+}
+
+// Add a room assignments view to the Rooms section
+function showRoomAssignments() {
+  const sectionRooms = document.getElementById('sectionRooms');
+  
+  // Add loading indicator
+  sectionRooms.innerHTML = `
+    <h2 class="mb-4">Resident Room Access</h2>
+    <div class="text-center my-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading room assignments...</span>
+      </div>
+    </div>
+  `;
+  
+  // Fetch room assignments
+  smartHomeApi.userRooms.getRoomsWithUsers().then(rooms => {
+    sectionRooms.innerHTML = `
+      <h2 class="mb-4">Resident Room Access</h2>
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Rooms Overview</span>
+          <button class="btn btn-sm btn-primary" id="refreshRoomsBtn">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  <th>Description</th>
+                  <th>Residents</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rooms.map(room => `
+                  <tr>
+                    <td>Room ${room.room_number}</td>
+                    <td>${room.description || 'N/A'}</td>
+                    <td>${room.residents || 'None'}</td>
+                    <td>
+                      <button class="btn btn-sm btn-primary view-room" data-room-id="${room.room_id}">
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add event listener to view room buttons
+    document.querySelectorAll('.view-room').forEach(button => {
+      button.addEventListener('click', () => viewRoomDetails(button.dataset.roomId));
+    });
+    
+    // Add event listener to refresh button
+    document.getElementById('refreshRoomsBtn').addEventListener('click', () => {
+      showRoomAssignments();
+    });
+  }).catch(error => {
+    console.error('Error fetching room assignments:', error);
+    sectionRooms.innerHTML = `
+      <h2 class="mb-4">Resident Room Access</h2>
+      <div class="alert alert-danger">
+        Error loading room assignments. Please try again.
+      </div>
+    `;
+  });
+}
+
 // Fetch users for the user management section
 async function fetchUsers() {
   const userSection = document.getElementById("sectionUsers");
@@ -830,6 +1361,21 @@ async function fetchUsers() {
   try {
     // Fetch users from API
     const users = await fetch("/users").then((res) => res.json());
+    
+    // For each user who is a resident, get their room assignment
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].role_name === 'resident') {
+        try {
+          const room = await smartHomeApi.userRooms.getUserRoom(users[i].user_id);
+          users[i].assignedRoom = room ? `Room ${room.room_number}` : 'None';
+        } catch (error) {
+          console.error(`Error fetching room for user ${users[i].user_id}:`, error);
+          users[i].assignedRoom = 'Error';
+        }
+      } else {
+        users[i].assignedRoom = 'N/A';
+      }
+    }
 
     // Remove loading indicator
     loadingIndicator.remove();
@@ -846,6 +1392,7 @@ async function fetchUsers() {
                 <th>Username</th>
                 <th>Role</th>
                 <th>Email</th>
+                <th>Room</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
@@ -859,6 +1406,7 @@ async function fetchUsers() {
                   <td>${user.username}</td>
                   <td>${user.role_name}</td>
                   <td>${user.email || "N/A"}</td>
+                  <td>${user.assignedRoom}</td>
                   <td>${new Date(user.created_at).toLocaleString()}</td>
                   <td>
                     <button class="btn btn-sm btn-warning edit-user" data-user-id="${
@@ -898,237 +1446,141 @@ async function fetchUsers() {
   }
 }
 
-// Edit user function
-async function editUser(userId) {
-  try {
-    // Fetch user details
-    const users = await fetch("/users").then((res) => res.json());
-    const user = users.find((u) => u.user_id === parseInt(userId));
+/*******************************************
+ * TIME PERIOD & FILTERS
+ *******************************************/
 
-    if (!user) {
-      alert("User not found");
-      return;
-    }
+const dayTab = document.getElementById("day-tab");
+const monthTab = document.getElementById("month-tab");
+const yearTab = document.getElementById("year-tab");
 
-    // Create and show edit modal
-    const modalHTML = `
-      <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Edit User</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <form id="editUserForm">
-                <div class="mb-3">
-                  <label for="editUsername" class="form-label">Username</label>
-                  <input type="text" class="form-control" id="editUsername" value="${
-                    user.username
-                  }" required>
-                </div>
-                <div class="mb-3">
-                  <label for="editEmail" class="form-label">Email</label>
-                  <input type="email" class="form-control" id="editEmail" value="${
-                    user.email || ""
-                  }">
-                </div>
-                <div class="mb-3">
-                  <label for="editRole" class="form-label">Role</label>
-                  <select class="form-select" id="editRole" required>
-                    <option value="1" ${
-                      user.role_name === "resident" ? "selected" : ""
-                    }>Resident</option>
-                    <option value="2" ${
-                      user.role_name === "staff" ? "selected" : ""
-                    }>Staff</option>
-                    <option value="3" ${
-                      user.role_name === "manager" ? "selected" : ""
-                    }>Manager</option>
-                    <option value="4" ${
-                      user.role_name === "admin" ? "selected" : ""
-                    }>Admin</option>
-                  </select>
-                </div>
-              </form>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="saveUserEdit">Save Changes</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+const additionalFilters = document.getElementById("additionalFilters");
+const filterDay = document.getElementById("filterDay");
+const filterMonth = document.getElementById("filterMonth");
+const filterYear = document.getElementById("filterYear");
 
-    // Add modal to document
-    const modalContainer = document.createElement("div");
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer);
+const dayInput = document.getElementById("dayInput");
+const monthSelect = document.getElementById("monthSelect");
+const yearSelect = document.getElementById("yearSelect");
 
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
-    modal.show();
+if (dayTab) {
+  dayTab.addEventListener("click", () => setActivePeriod("day"));
+}
+if (monthTab) {
+  monthTab.addEventListener("click", () => setActivePeriod("month"));
+}
+if (yearTab) {
+  yearTab.addEventListener("click", () => setActivePeriod("year"));
+}
 
-    // Handle save button click
-    document
-      .getElementById("saveUserEdit")
-      .addEventListener("click", async () => {
-        const username = document.getElementById("editUsername").value;
-        const email = document.getElementById("editEmail").value;
-        const roleId = document.getElementById("editRole").value;
+if (dayInput) {
+  dayInput.addEventListener("change", function () {
+    setChartData("day");
+  });
+}
+if (monthSelect) {
+  monthSelect.addEventListener("change", function () {
+    setChartData("month");
+  });
+}
+if (yearSelect) {
+  yearSelect.addEventListener("change", function () {
+    setChartData("year");
+  });
+}
 
-        try {
-          const response = await fetch(`/users/${userId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, email, roleId }),
-          });
+function setActivePeriod(period) {
+  dayTab.classList.remove("active");
+  monthTab.classList.remove("active");
+  yearTab.classList.remove("active");
 
-          if (!response.ok) {
-            throw new Error("Failed to update user");
-          }
+  if (period === "day") {
+    dayTab.classList.add("active");
+  } else if (period === "month") {
+    monthTab.classList.add("active");
+  } else {
+    yearTab.classList.add("active");
+  }
 
-          // Close modal and refresh user list
-          modal.hide();
-          fetchUsers();
-        } catch (error) {
-          console.error("Error updating user:", error);
-          alert("Failed to update user. Please try again.");
-        }
-      });
+  currentPeriod = period; // Update current period
+  localStorage.setItem("selectedPeriod", period); // Save the selected period
 
-    // Remove modal from DOM when closed
-    document
-      .getElementById("editUserModal")
-      .addEventListener("hidden.bs.modal", function () {
-        document.body.removeChild(modalContainer);
-      });
-  } catch (error) {
-    console.error("Error editing user:", error);
-    alert("Error loading user details. Please try again.");
+  toggleFilter(period);
+  setChartData(period);
+  updateEnergySummary();
+}
+
+function toggleFilter(mode) {
+  additionalFilters.style.display = "block";
+  filterDay.style.display = "none";
+  filterMonth.style.display = "none";
+  filterYear.style.display = "none";
+
+  if (mode === "day") {
+    filterDay.style.display = "block";
+  } else if (mode === "month") {
+    filterMonth.style.display = "block";
+  } else if (mode === "year") {
+    filterYear.style.display = "block";
   }
 }
 
-// Delete user function
-async function deleteUser(userId) {
-  if (
-    confirm(
-      `Are you sure you want to delete this user? This action cannot be undone.`
-    )
-  ) {
-    try {
-      const response = await fetch(`/users/${userId}`, {
-        method: "DELETE",
-      });
+/*******************************************
+ * EXPORT FUNCTIONS
+ *******************************************/
 
-      if (!response.ok) {
-        throw new Error("Failed to delete user");
-      }
+// Export chart as image
+function exportChart() {
+  if (!energyChart) return;
 
-      // Refresh user list
-      fetchUsers();
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user. Please try again.");
-    }
-  }
+  const canvas = document.getElementById("energyChart");
+  const image = canvas.toDataURL("image/png");
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = image;
+  downloadLink.download = `energy-chart-${currentPeriod}-${new Date()
+    .toISOString()
+    .slice(0, 10)}.png`;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
 }
 
-// Add user function
-function addUser() {
-  const modalHTML = `
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add New User</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="addUserForm">
-              <div class="mb-3">
-                <label for="newUsername" class="form-label">Username</label>
-                <input type="text" class="form-control" id="newUsername" required>
-              </div>
-              <div class="mb-3">
-                <label for="newPassword" class="form-label">Password</label>
-                <input type="password" class="form-control" id="newPassword" required>
-              </div>
-              <div class="mb-3">
-                <label for="newEmail" class="form-label">Email</label>
-                <input type="email" class="form-control" id="newEmail">
-              </div>
-              <div class="mb-3">
-                <label for="newRole" class="form-label">Role</label>
-                <select class="form-select" id="newRole" required>
-                  <option value="1">Resident</option>
-                  <option value="2">Staff</option>
-                  <option value="3">Manager</option>
-                  <option value="4">Admin</option>
-                </select>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="saveNewUser">Add User</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+// Export data as CSV
+function exportCSV() {
+  if (!energyChart) return;
 
-  // Add modal to document
-  const modalContainer = document.createElement("div");
-  modalContainer.innerHTML = modalHTML;
-  document.body.appendChild(modalContainer);
+  const datasets = energyChart.data.datasets;
+  const labels = energyChart.data.labels;
 
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById("addUserModal"));
-  modal.show();
+  let csvContent = "data:text/csv;charset=utf-8,";
 
-  // Handle save button click
-  document.getElementById("saveNewUser").addEventListener("click", async () => {
-    const username = document.getElementById("newUsername").value;
-    const password = document.getElementById("newPassword").value;
-    const email = document.getElementById("newEmail").value;
-    const roleId = document.getElementById("newRole").value;
+  // Add header row
+  let headerRow = ["Period"];
+  datasets.forEach((dataset) => {
+    headerRow.push(dataset.label);
+  });
+  csvContent += headerRow.join(",") + "\r\n";
 
-    try {
-      const response = await fetch("/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: username,
-          password: password,
-          isAdmin: roleId === "4",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create user");
-      }
-
-      // Close modal and refresh user list
-      modal.hide();
-      fetchUsers();
-    } catch (error) {
-      console.error("Error creating user:", error);
-      alert("Failed to create user. Please try again.");
-    }
+  // Add data rows
+  labels.forEach((label, index) => {
+    let row = [label];
+    datasets.forEach((dataset) => {
+      row.push(dataset.data[index]);
+    });
+    csvContent += row.join(",") + "\r\n";
   });
 
-  // Remove modal from DOM when closed
-  document
-    .getElementById("addUserModal")
-    .addEventListener("hidden.bs.modal", function () {
-      document.body.removeChild(modalContainer);
-    });
+  // Create download link
+  const encodedUri = encodeURI(csvContent);
+  const downloadLink = document.createElement("a");
+  downloadLink.href = encodedUri;
+  downloadLink.download = `energy-data-${currentPeriod}-${new Date()
+    .toISOString()
+    .slice(0, 10)}.csv`;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
 }
 
 /*******************************************
@@ -1278,143 +1730,6 @@ async function updateEnergySummary() {
     energySummary.innerHTML =
       '<div class="alert alert-danger">Error loading energy summary. Please try again.</div>';
   }
-}
-
-/*******************************************
- * TIME PERIOD & FILTERS
- *******************************************/
-
-const dayTab = document.getElementById("day-tab");
-const monthTab = document.getElementById("month-tab");
-const yearTab = document.getElementById("year-tab");
-
-const additionalFilters = document.getElementById("additionalFilters");
-const filterDay = document.getElementById("filterDay");
-const filterMonth = document.getElementById("filterMonth");
-const filterYear = document.getElementById("filterYear");
-
-const dayInput = document.getElementById("dayInput");
-const monthSelect = document.getElementById("monthSelect");
-const yearSelect = document.getElementById("yearSelect");
-
-if (dayTab) {
-  dayTab.addEventListener("click", () => setActivePeriod("day"));
-}
-if (monthTab) {
-  monthTab.addEventListener("click", () => setActivePeriod("month"));
-}
-if (yearTab) {
-  yearTab.addEventListener("click", () => setActivePeriod("year"));
-}
-
-if (dayInput) {
-  dayInput.addEventListener("change", function () {
-    setChartData("day");
-  });
-}
-if (monthSelect) {
-  monthSelect.addEventListener("change", function () {
-    setChartData("month");
-  });
-}
-if (yearSelect) {
-  yearSelect.addEventListener("change", function () {
-    setChartData("year");
-  });
-}
-
-function setActivePeriod(period) {
-  dayTab.classList.remove("active");
-  monthTab.classList.remove("active");
-  yearTab.classList.remove("active");
-
-  if (period === "day") {
-    dayTab.classList.add("active");
-  } else if (period === "month") {
-    monthTab.classList.add("active");
-  } else {
-    yearTab.classList.add("active");
-  }
-
-  currentPeriod = period; // Update current period
-  localStorage.setItem("selectedPeriod", period); // Save the selected period
-
-  toggleFilter(period);
-  setChartData(period);
-  updateEnergySummary();
-}
-
-function toggleFilter(mode) {
-  additionalFilters.style.display = "block";
-  filterDay.style.display = "none";
-  filterMonth.style.display = "none";
-  filterYear.style.display = "none";
-
-  if (mode === "day") {
-    filterDay.style.display = "block";
-  } else if (mode === "month") {
-    filterMonth.style.display = "block";
-  } else if (mode === "year") {
-    filterYear.style.display = "block";
-  }
-}
-
-/*******************************************
- * EXPORT FUNCTIONS
- *******************************************/
-
-// Export chart as image
-function exportChart() {
-  if (!energyChart) return;
-
-  const canvas = document.getElementById("energyChart");
-  const image = canvas.toDataURL("image/png");
-
-  const downloadLink = document.createElement("a");
-  downloadLink.href = image;
-  downloadLink.download = `energy-chart-${currentPeriod}-${new Date()
-    .toISOString()
-    .slice(0, 10)}.png`;
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-}
-
-// Export data as CSV
-function exportCSV() {
-  if (!energyChart) return;
-
-  const datasets = energyChart.data.datasets;
-  const labels = energyChart.data.labels;
-
-  let csvContent = "data:text/csv;charset=utf-8,";
-
-  // Add header row
-  let headerRow = ["Period"];
-  datasets.forEach((dataset) => {
-    headerRow.push(dataset.label);
-  });
-  csvContent += headerRow.join(",") + "\r\n";
-
-  // Add data rows
-  labels.forEach((label, index) => {
-    let row = [label];
-    datasets.forEach((dataset) => {
-      row.push(dataset.data[index]);
-    });
-    csvContent += row.join(",") + "\r\n";
-  });
-
-  // Create download link
-  const encodedUri = encodeURI(csvContent);
-  const downloadLink = document.createElement("a");
-  downloadLink.href = encodedUri;
-  downloadLink.download = `energy-data-${currentPeriod}-${new Date()
-    .toISOString()
-    .slice(0, 10)}.csv`;
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
 }
 
 /*******************************************

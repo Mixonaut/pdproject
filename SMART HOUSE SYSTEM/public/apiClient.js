@@ -252,6 +252,125 @@ const smartHomeApi = {
   },
 
   /**
+   * User-Room Assignment related API methods
+   */
+  userRooms: {
+    /**
+     * Get all user-room assignments
+     * @returns {Promise<Array>} Array of assignments
+     */
+    getAllAssignments: async function() {
+      try {
+        const response = await fetch('/api/user-room-assignments');
+        if (!response.ok) throw new Error('Failed to fetch assignments');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching assignments:', error);
+        return [];
+      }
+    },
+    
+    /**
+     * Get rooms with their assigned users
+     * @returns {Promise<Array>} Array of rooms with user information
+     */
+    getRoomsWithUsers: async function() {
+      try {
+        const response = await fetch('/api/rooms-with-users');
+        if (!response.ok) throw new Error('Failed to fetch rooms with users');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching rooms with users:', error);
+        return [];
+      }
+    },
+    
+    /**
+     * Get a user's assigned room
+     * @param {number} userId - User ID
+     * @returns {Promise<Object|null>} Room object or null if no assignment
+     */
+    getUserRoom: async function(userId) {
+      try {
+        const response = await fetch(`/api/users/${userId}/room`);
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error('Failed to fetch user room');
+        return await response.json();
+      } catch (error) {
+        console.error(`Error fetching room for user ${userId}:`, error);
+        return null;
+      }
+    },
+    
+    /**
+     * Get users assigned to a room
+     * @param {number} roomId - Room ID
+     * @returns {Promise<Array>} Array of users
+     */
+    getUsersByRoom: async function(roomId) {
+      try {
+        const response = await fetch(`/api/rooms/${roomId}/users`);
+        if (!response.ok) throw new Error('Failed to fetch room users');
+        return await response.json();
+      } catch (error) {
+        console.error(`Error fetching users for room ${roomId}:`, error);
+        return [];
+      }
+    },
+    
+    /**
+     * Assign a room to a user
+     * @param {number} userId - User ID
+     * @param {number} roomId - Room ID 
+     * @returns {Promise<Object>} Result message
+     */
+    assignRoom: async function(userId, roomId) {
+      try {
+        const response = await fetch(`/api/users/${userId}/room`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ roomId }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to assign room');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error(`Error assigning room ${roomId} to user ${userId}:`, error);
+        throw error;
+      }
+    },
+    
+    /**
+     * Remove a user's room assignment
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} Result message
+     */
+    removeAssignment: async function(userId) {
+      try {
+        const response = await fetch(`/api/users/${userId}/room`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove assignment');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error(`Error removing room assignment for user ${userId}:`, error);
+        throw error;
+      }
+    }
+  },
+
+  /**
    * Testing methods - only for development
    */
   test: {

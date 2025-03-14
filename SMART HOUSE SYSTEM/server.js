@@ -8,6 +8,7 @@ const auth = require("./auth");
 // Import service modules
 const energyService = require("./energyService");
 const deviceService = require("./deviceService");
+const userRoomService = require("./userRoomService");
 
 // Middleware
 app.use(express.json());
@@ -304,6 +305,121 @@ app.get("/api/rooms/:roomId/energy/by-device-type", async (req, res) => {
   } catch (error) {
     console.error("Error fetching energy by device type:", error);
     res.status(500).json({ error: "Failed to fetch energy by device type" });
+  }
+});
+
+// User-Room Assignment Routes
+app.get("/api/user-room-assignments", async (req, res) => {
+  try {
+    const assignments = await userRoomService.getAllAssignments();
+    res.json(assignments);
+  } catch (error) {
+    console.error("Error fetching user-room assignments:", error);
+    res.status(500).json({ error: "Failed to fetch assignments" });
+  }
+});
+
+app.get("/api/rooms-with-users", async (req, res) => {
+  try {
+    const roomsWithUsers = await userRoomService.getRoomsWithUsers();
+    res.json(roomsWithUsers);
+  } catch (error) {
+    console.error("Error fetching rooms with users:", error);
+    res.status(500).json({ error: "Failed to fetch rooms with users" });
+  }
+});
+
+app.get("/api/users/:userId/room", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const room = await userRoomService.getUserRoom(userId);
+    
+    if (room) {
+      res.json(room);
+    } else {
+      res.status(404).json({ message: "No room assigned to this user" });
+    }
+  } catch (error) {
+    console.error(`Error fetching room for user ${userId}:`, error);
+    res.status(500).json({ error: "Failed to fetch user's room" });
+  }
+});
+
+app.get("/api/rooms/:roomId/users", async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const users = await userRoomService.getUsersByRoom(roomId);
+    res.json(users);
+  } catch (error) {
+    console.error(`Error fetching users for room ${roomId}:`, error);
+    res.status(500).json({ error: "Failed to fetch room's users" });
+  }
+});
+
+app.post("/api/users/:userId/room", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { roomId } = req.body;
+    
+    if (!roomId) {
+      return res.status(400).json({ error: "Room ID is required" });
+    }
+    
+    // Check if the room exists
+    const roomCheck = await db.query(
+      "SELECT room_id FROM rooms WHERE room_id = ?", 
+      [roomId]
+    );
+    
+    if (roomCheck.length === 0) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+    
+    // Check if the user exists
+    const userCheck = await db.query(
+      "SELECT user_id FROM users WHERE user_id = ?", 
+      [userId]
+    );
+    
+    if (userCheck.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Check if the room has availability
+    const isAvailable = await userRoomService.checkRoomAvailability(roomId);
+    if (!isAvailable) {
+      return res.status(400).json({ error: "Room is already at capacity" });
+    }
+    
+    // Assign the room
+    const success = await userRoomService.assignRoom(userId, roomId);
+    
+    if (success) {
+      res.status(201).json({ 
+        message: "Room assigned successfully" 
+      });
+    } else {
+      res.status(500).json({ error: "Failed to assign room" });
+    }
+  } catch (error) {
+    console.error(`Error assigning room to user ${userId}:`, error);
+    res.status(500).json({ error: "Failed to assign room" });
+  }
+});
+
+app.delete("/api/users/:userId/room", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await userRoomService.removeAssignment(userId);
+    
+    if (result) {
+      res.json({ message: "Room assignment removed successfully" });
+    } else {
+      res.status(404).json({ message: "No active room assignment found for this user" });
+    }
+  } catch (error) {
+    console.error(`Error removing room assignment for user ${userId}:`, error);
+    res.status(500).json({ error: "Failed to remove room assignment" });
   }
 });
 

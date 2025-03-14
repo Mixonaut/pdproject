@@ -9,11 +9,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const btnAnalytics = document.getElementById("btnAnalytics");
   const btnRooms = document.getElementById("btnRooms");
   const btnUsers = document.getElementById("btnUsers");
+  const btnLogout = document.getElementById("btnLogout");
 
   // Add click events to switch sections
   btnAnalytics.addEventListener("click", () => showSection("analytics"));
   btnRooms.addEventListener("click", () => showSection("rooms"));
   btnUsers.addEventListener("click", () => showSection("users"));
+  btnLogout.addEventListener("click", handleLogout);
 
   // Initialize Chart.js chart
   initEnergyChart();
@@ -104,12 +106,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Add user management button listeners
   document.getElementById("btnAddUser").addEventListener("click", addUser);
-  document.getElementById("btnEditUser").addEventListener("click", function() {
+  document.getElementById("btnEditUser").addEventListener("click", function () {
     alert("Please select a user from the list to edit.");
   });
-  document.getElementById("btnRemoveUser").addEventListener("click", function() {
-    alert("Please select a user from the list to delete.");
-  });
+  document
+    .getElementById("btnRemoveUser")
+    .addEventListener("click", function () {
+      alert("Please select a user from the list to delete.");
+    });
 });
 
 /*******************************************
@@ -575,7 +579,7 @@ async function viewRoomDetails(roomId) {
 
     // Fetch devices for the room
     const devices = await smartHomeApi.devices.getByRoom(roomId);
-    
+
     // Fetch users assigned to this room
     const users = await smartHomeApi.userRooms.getUsersByRoom(roomId);
 
@@ -606,14 +610,24 @@ async function viewRoomDetails(roomId) {
                       </tr>
                     </thead>
                     <tbody>
-                      ${users.length ? users.map(user => `
+                      ${
+                        users.length
+                          ? users
+                              .map(
+                                (user) => `
                         <tr>
                           <td>${user.username}</td>
                           <td>${user.role_name}</td>
-                          <td>${user.email || 'N/A'}</td>
-                          <td>${new Date(user.assigned_date).toLocaleString()}</td>
+                          <td>${user.email || "N/A"}</td>
+                          <td>${new Date(
+                            user.assigned_date
+                          ).toLocaleString()}</td>
                         </tr>
-                      `).join('') : '<tr><td colspan="4" class="text-center">No residents assigned to this room</td></tr>'}
+                      `
+                              )
+                              .join("")
+                          : '<tr><td colspan="4" class="text-center">No residents assigned to this room</td></tr>'
+                      }
                     </tbody>
                   </table>
                 </div>
@@ -727,11 +741,13 @@ async function viewRoomDetails(roomId) {
     document.getElementById("addDeviceBtn").addEventListener("click", () => {
       showAddDeviceForm(roomId, modal);
     });
-    
+
     // Assign resident button handler
-    document.getElementById("assignResidentBtn").addEventListener("click", () => {
-      showAssignResidentForm(roomId, modal);
-    });
+    document
+      .getElementById("assignResidentBtn")
+      .addEventListener("click", () => {
+        showAssignResidentForm(roomId, modal);
+      });
 
     // Remove the modal from DOM when it's closed
     document
@@ -855,17 +871,17 @@ async function showAssignResidentForm(roomId, parentModal) {
   if (parentModal) {
     parentModal.hide();
   }
-  
+
   // Fetch all users with resident role
   let residents = [];
   try {
-    const allUsers = await fetch('/users').then(res => res.json());
-    residents = allUsers.filter(user => user.role_name === 'resident');
+    const allUsers = await fetch("/users").then((res) => res.json());
+    residents = allUsers.filter((user) => user.role_name === "resident");
   } catch (error) {
-    console.error('Error fetching residents:', error);
+    console.error("Error fetching residents:", error);
     residents = [];
   }
-  
+
   // Create and show the assign resident modal
   const assignResidentHTML = `
     <div class="modal fade" id="assignResidentModal" tabindex="-1">
@@ -881,9 +897,13 @@ async function showAssignResidentForm(roomId, parentModal) {
                 <label for="residentSelect" class="form-label">Select Resident</label>
                 <select class="form-select" id="residentSelect" required>
                   <option value="">-- Select a Resident --</option>
-                  ${residents.map(resident => `
+                  ${residents
+                    .map(
+                      (resident) => `
                     <option value="${resident.user_id}">${resident.username}</option>
-                  `).join('')}
+                  `
+                    )
+                    .join("")}
                 </select>
               </div>
             </form>
@@ -903,54 +923,61 @@ async function showAssignResidentForm(roomId, parentModal) {
   document.body.appendChild(modalContainer);
 
   // Show the modal
-  const modal = new bootstrap.Modal(document.getElementById("assignResidentModal"));
+  const modal = new bootstrap.Modal(
+    document.getElementById("assignResidentModal")
+  );
   modal.show();
 
   // Add event listener to submit button
-  document.getElementById("submitAssignResident").addEventListener("click", async () => {
-    const userId = document.getElementById("residentSelect").value;
+  document
+    .getElementById("submitAssignResident")
+    .addEventListener("click", async () => {
+      const userId = document.getElementById("residentSelect").value;
 
-    if (!userId) {
-      alert("Please select a resident.");
-      return;
-    }
+      if (!userId) {
+        alert("Please select a resident.");
+        return;
+      }
 
-    try {
-      // Show loading state
-      const submitBtn = document.getElementById("submitAssignResident");
-      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Assigning...';
-      submitBtn.disabled = true;
+      try {
+        // Show loading state
+        const submitBtn = document.getElementById("submitAssignResident");
+        submitBtn.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Assigning...';
+        submitBtn.disabled = true;
 
-      // Assign the resident to the room via API
-      await smartHomeApi.userRooms.assignRoom(userId, roomId);
+        // Assign the resident to the room via API
+        await smartHomeApi.userRooms.assignRoom(userId, roomId);
 
-      // Hide the modal
-      modal.hide();
+        // Hide the modal
+        modal.hide();
 
-      // Show success message
-      alert("Resident assigned to room successfully.");
+        // Show success message
+        alert("Resident assigned to room successfully.");
 
-      // Reopen the room details modal
-      viewRoomDetails(roomId);
-    } catch (error) {
-      console.error("Error assigning resident:", error);
-      alert(`Error assigning resident: ${error.message}`);
+        // Reopen the room details modal
+        viewRoomDetails(roomId);
+      } catch (error) {
+        console.error("Error assigning resident:", error);
+        alert(`Error assigning resident: ${error.message}`);
 
-      // Reset button
-      submitBtn.innerHTML = "Assign to Room";
-      submitBtn.disabled = false;
-    }
-  });
+        // Reset button
+        submitBtn.innerHTML = "Assign to Room";
+        submitBtn.disabled = false;
+      }
+    });
 
   // Remove the modal from DOM when it's closed
-  document.getElementById("assignResidentModal").addEventListener("hidden.bs.modal", function () {
-    document.body.removeChild(modalContainer);
+  document
+    .getElementById("assignResidentModal")
+    .addEventListener("hidden.bs.modal", function () {
+      document.body.removeChild(modalContainer);
 
-    // Reopen the parent modal if it was closed
-    if (parentModal) {
-      parentModal.show();
-    }
-  });
+      // Reopen the parent modal if it was closed
+      if (parentModal) {
+        parentModal.show();
+      }
+    });
 }
 
 /*******************************************
@@ -971,31 +998,33 @@ async function getUserRoom(userId) {
 async function editUser(userId) {
   try {
     // Show loading modal
-    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    const loadingModal = new bootstrap.Modal(
+      document.getElementById("loadingModal")
+    );
     loadingModal.show();
-    
+
     // Fetch user details
-    const users = await fetch('/users').then(res => res.json());
-    const user = users.find(u => u.user_id === parseInt(userId));
-    
+    const users = await fetch("/users").then((res) => res.json());
+    const user = users.find((u) => u.user_id === parseInt(userId));
+
     if (!user) {
       loadingModal.hide();
-      alert('User not found');
+      alert("User not found");
       return;
     }
-    
+
     // Fetch available rooms
     const rooms = await smartHomeApi.rooms.getAll();
-    
+
     // Fetch user's current room
     const currentRoom = await getUserRoom(userId);
-    
+
     // Hide loading modal
     loadingModal.hide();
-    
+
     // Only show room assignment for residents
-    const isResident = user.role_name === 'resident';
-    
+    const isResident = user.role_name === "resident";
+
     // Create and show edit modal
     const modalHTML = `
       <div class="modal fade" id="editUserModal" tabindex="-1">
@@ -1009,31 +1038,53 @@ async function editUser(userId) {
               <form id="editUserForm">
                 <div class="mb-3">
                   <label for="editUsername" class="form-label">Username</label>
-                  <input type="text" class="form-control" id="editUsername" value="${user.username}" required>
+                  <input type="text" class="form-control" id="editUsername" value="${
+                    user.username
+                  }" required>
                 </div>
                 <div class="mb-3">
                   <label for="editEmail" class="form-label">Email</label>
-                  <input type="email" class="form-control" id="editEmail" value="${user.email || ''}">
+                  <input type="email" class="form-control" id="editEmail" value="${
+                    user.email || ""
+                  }">
                 </div>
                 <div class="mb-3">
                   <label for="editRole" class="form-label">Role</label>
                   <select class="form-select" id="editRole" required>
-                    <option value="1" ${user.role_name === 'resident' ? 'selected' : ''}>Resident</option>
-                    <option value="2" ${user.role_name === 'staff' ? 'selected' : ''}>Staff</option>
-                    <option value="3" ${user.role_name === 'manager' ? 'selected' : ''}>Manager</option>
-                    <option value="4" ${user.role_name === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="1" ${
+                      user.role_name === "resident" ? "selected" : ""
+                    }>Resident</option>
+                    <option value="2" ${
+                      user.role_name === "staff" ? "selected" : ""
+                    }>Staff</option>
+                    <option value="3" ${
+                      user.role_name === "manager" ? "selected" : ""
+                    }>Manager</option>
+                    <option value="4" ${
+                      user.role_name === "admin" ? "selected" : ""
+                    }>Admin</option>
                   </select>
                 </div>
                 
-                <div id="roomAssignmentSection" class="mb-3 ${isResident ? '' : 'd-none'}">
+                <div id="roomAssignmentSection" class="mb-3 ${
+                  isResident ? "" : "d-none"
+                }">
                   <label for="assignedRoom" class="form-label">Assigned Room</label>
                   <select class="form-select" id="assignedRoom">
                     <option value="">-- No Room Assigned --</option>
-                    ${rooms.map(room => `
-                      <option value="${room.room_id}" ${currentRoom && currentRoom.room_id === room.room_id ? 'selected' : ''}>
-                        Room ${room.room_number} - ${room.description || ''}
+                    ${rooms
+                      .map(
+                        (room) => `
+                      <option value="${room.room_id}" ${
+                          currentRoom && currentRoom.room_id === room.room_id
+                            ? "selected"
+                            : ""
+                        }>
+                        Room ${room.room_number} - ${room.description || ""}
                       </option>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                   </select>
                 </div>
               </form>
@@ -1048,76 +1099,84 @@ async function editUser(userId) {
     `;
 
     // Add modal to document
-    const modalContainer = document.createElement('div');
+    const modalContainer = document.createElement("div");
     modalContainer.innerHTML = modalHTML;
     document.body.appendChild(modalContainer);
 
     // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
     modal.show();
-    
+
     // Show/hide room assignment based on role
-    document.getElementById('editRole').addEventListener('change', function() {
-      const isResident = this.value === '1';
-      document.getElementById('roomAssignmentSection').classList.toggle('d-none', !isResident);
+    document.getElementById("editRole").addEventListener("change", function () {
+      const isResident = this.value === "1";
+      document
+        .getElementById("roomAssignmentSection")
+        .classList.toggle("d-none", !isResident);
     });
 
     // Handle save button click
-    document.getElementById('saveUserEdit').addEventListener('click', async () => {
-      const username = document.getElementById('editUsername').value;
-      const email = document.getElementById('editEmail').value;
-      const roleId = document.getElementById('editRole').value;
-      const roomId = document.getElementById('assignedRoom').value;
-      
-      try {
-        // Update the user info
-        const response = await fetch(`/users/${userId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, email, roleId }),
-        });
+    document
+      .getElementById("saveUserEdit")
+      .addEventListener("click", async () => {
+        const username = document.getElementById("editUsername").value;
+        const email = document.getElementById("editEmail").value;
+        const roleId = document.getElementById("editRole").value;
+        const roomId = document.getElementById("assignedRoom").value;
 
-        if (!response.ok) {
-          throw new Error('Failed to update user');
-        }
-        
-        // If the user is a resident, handle room assignment
-        if (roleId === '1') {
-          if (roomId) {
-            // Assign the room
-            await smartHomeApi.userRooms.assignRoom(userId, roomId);
-          } else {
-            // Remove assignment if "No Room" was selected
-            await smartHomeApi.userRooms.removeAssignment(userId);
+        try {
+          // Update the user info
+          const response = await fetch(`/users/${userId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, email, roleId }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to update user");
           }
-        }
 
-        // Close modal and refresh user list
-        modal.hide();
-        fetchUsers();
-      } catch (error) {
-        console.error('Error updating user:', error);
-        alert('Failed to update user: ' + error.message);
-      }
-    });
+          // If the user is a resident, handle room assignment
+          if (roleId === "1") {
+            if (roomId) {
+              // Assign the room
+              await smartHomeApi.userRooms.assignRoom(userId, roomId);
+            } else {
+              // Remove assignment if "No Room" was selected
+              await smartHomeApi.userRooms.removeAssignment(userId);
+            }
+          }
+
+          // Close modal and refresh user list
+          modal.hide();
+          fetchUsers();
+        } catch (error) {
+          console.error("Error updating user:", error);
+          alert("Failed to update user: " + error.message);
+        }
+      });
 
     // Remove modal from DOM when closed
-    document.getElementById('editUserModal').addEventListener('hidden.bs.modal', function() {
-      document.body.removeChild(modalContainer);
-    });
+    document
+      .getElementById("editUserModal")
+      .addEventListener("hidden.bs.modal", function () {
+        document.body.removeChild(modalContainer);
+      });
   } catch (error) {
-    console.error('Error editing user:', error);
-    alert('Error loading user details. Please try again.');
+    console.error("Error editing user:", error);
+    alert("Error loading user details. Please try again.");
   }
 }
 
 // Enhanced add user function with room assignment
 function addUser() {
   // Fetch rooms first
-  smartHomeApi.rooms.getAll().then(rooms => {
-    const modalHTML = `
+  smartHomeApi.rooms
+    .getAll()
+    .then((rooms) => {
+      const modalHTML = `
       <div class="modal fade" id="addUserModal" tabindex="-1">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -1152,11 +1211,15 @@ function addUser() {
                   <label for="newAssignedRoom" class="form-label">Assigned Room</label>
                   <select class="form-select" id="newAssignedRoom">
                     <option value="">-- No Room Assigned --</option>
-                    ${rooms.map(room => `
+                    ${rooms
+                      .map(
+                        (room) => `
                       <option value="${room.room_id}">
-                        Room ${room.room_number} - ${room.description || ''}
+                        Room ${room.room_number} - ${room.description || ""}
                       </option>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                   </select>
                 </div>
               </form>
@@ -1170,101 +1233,116 @@ function addUser() {
       </div>
     `;
 
-    // Add modal to document
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer);
+      // Add modal to document
+      const modalContainer = document.createElement("div");
+      modalContainer.innerHTML = modalHTML;
+      document.body.appendChild(modalContainer);
 
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
-    modal.show();
-    
-    // Show/hide room assignment based on role
-    document.getElementById('newRole').addEventListener('change', function() {
-      const isResident = this.value === '1';
-      document.getElementById('newRoomAssignmentSection').classList.toggle('d-none', !isResident);
-    });
+      // Show modal
+      const modal = new bootstrap.Modal(
+        document.getElementById("addUserModal")
+      );
+      modal.show();
 
-    // Handle save button click
-    document.getElementById('saveNewUser').addEventListener('click', async () => {
-      const username = document.getElementById('newUsername').value;
-      const password = document.getElementById('newPassword').value;
-      const email = document.getElementById('newEmail').value;
-      const roleId = document.getElementById('newRole').value;
-      const roomId = document.getElementById('newAssignedRoom').value;
-
-      try {
-        // Create user first
-        const response = await fetch('/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: username,
-            password: password,
-            isAdmin: roleId === '4',
-            email: email
-          }),
+      // Show/hide room assignment based on role
+      document
+        .getElementById("newRole")
+        .addEventListener("change", function () {
+          const isResident = this.value === "1";
+          document
+            .getElementById("newRoomAssignmentSection")
+            .classList.toggle("d-none", !isResident);
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to create user');
-        }
-        
-        const result = await response.json();
-        const userId = result.userId;
-        
-        // If the user is a resident and a room was selected, assign it
-        if (roleId === '1' && roomId) {
-          await smartHomeApi.userRooms.assignRoom(userId, roomId);
-        }
+      // Handle save button click
+      document
+        .getElementById("saveNewUser")
+        .addEventListener("click", async () => {
+          const username = document.getElementById("newUsername").value;
+          const password = document.getElementById("newPassword").value;
+          const email = document.getElementById("newEmail").value;
+          const roleId = document.getElementById("newRole").value;
+          const roomId = document.getElementById("newAssignedRoom").value;
 
-        // Close modal and refresh user list
-        modal.hide();
-        fetchUsers();
-      } catch (error) {
-        console.error('Error creating user:', error);
-        alert('Failed to create user: ' + error.message);
-      }
-    });
+          try {
+            // Create user first
+            const response = await fetch("/users", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: username,
+                password: password,
+                isAdmin: roleId === "4",
+                email: email,
+              }),
+            });
 
-    // Remove modal from DOM when closed
-    document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
-      document.body.removeChild(modalContainer);
+            if (!response.ok) {
+              throw new Error("Failed to create user");
+            }
+
+            const result = await response.json();
+            const userId = result.userId;
+
+            // If the user is a resident and a room was selected, assign it
+            if (roleId === "1" && roomId) {
+              await smartHomeApi.userRooms.assignRoom(userId, roomId);
+            }
+
+            // Close modal and refresh user list
+            modal.hide();
+            fetchUsers();
+          } catch (error) {
+            console.error("Error creating user:", error);
+            alert("Failed to create user: " + error.message);
+          }
+        });
+
+      // Remove modal from DOM when closed
+      document
+        .getElementById("addUserModal")
+        .addEventListener("hidden.bs.modal", function () {
+          document.body.removeChild(modalContainer);
+        });
+    })
+    .catch((error) => {
+      console.error("Error fetching rooms:", error);
+      alert("Could not load available rooms. Please try again.");
     });
-  }).catch(error => {
-    console.error('Error fetching rooms:', error);
-    alert('Could not load available rooms. Please try again.');
-  });
 }
 
 // Enhanced delete user function
 async function deleteUser(userId) {
-  if (confirm(`Are you sure you want to delete this user? This action cannot be undone.`)) {
+  if (
+    confirm(
+      `Are you sure you want to delete this user? This action cannot be undone.`
+    )
+  ) {
     try {
       // We don't need to worry about the room assignment as it will be deleted cascade
       const response = await fetch(`/users/${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete user');
+        throw new Error("Failed to delete user");
       }
 
       // Refresh user list
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('Failed to delete user. Please try again.');
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user. Please try again.");
     }
   }
 }
 
 // Add a room assignments view to the Rooms section
 function showRoomAssignments() {
-  const sectionRooms = document.getElementById('sectionRooms');
-  
+  const sectionRooms = document.getElementById("sectionRooms");
+
   // Add loading indicator
   sectionRooms.innerHTML = `
     <h2 class="mb-4">Resident Room Access</h2>
@@ -1274,10 +1352,12 @@ function showRoomAssignments() {
       </div>
     </div>
   `;
-  
+
   // Fetch room assignments
-  smartHomeApi.userRooms.getRoomsWithUsers().then(rooms => {
-    sectionRooms.innerHTML = `
+  smartHomeApi.userRooms
+    .getRoomsWithUsers()
+    .then((rooms) => {
+      sectionRooms.innerHTML = `
       <h2 class="mb-4">Resident Room Access</h2>
       <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -1298,43 +1378,54 @@ function showRoomAssignments() {
                 </tr>
               </thead>
               <tbody>
-                ${rooms.map(room => `
+                ${rooms
+                  .map(
+                    (room) => `
                   <tr>
                     <td>Room ${room.room_number}</td>
-                    <td>${room.description || 'N/A'}</td>
-                    <td>${room.residents || 'None'}</td>
+                    <td>${room.description || "N/A"}</td>
+                    <td>${room.residents || "None"}</td>
                     <td>
-                      <button class="btn btn-sm btn-primary view-room" data-room-id="${room.room_id}">
+                      <button class="btn btn-sm btn-primary view-room" data-room-id="${
+                        room.room_id
+                      }">
                         View Details
                       </button>
                     </td>
                   </tr>
-                `).join('')}
+                `
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
         </div>
       </div>
     `;
-    
-    // Add event listener to view room buttons
-    document.querySelectorAll('.view-room').forEach(button => {
-      button.addEventListener('click', () => viewRoomDetails(button.dataset.roomId));
-    });
-    
-    // Add event listener to refresh button
-    document.getElementById('refreshRoomsBtn').addEventListener('click', () => {
-      showRoomAssignments();
-    });
-  }).catch(error => {
-    console.error('Error fetching room assignments:', error);
-    sectionRooms.innerHTML = `
+
+      // Add event listener to view room buttons
+      document.querySelectorAll(".view-room").forEach((button) => {
+        button.addEventListener("click", () =>
+          viewRoomDetails(button.dataset.roomId)
+        );
+      });
+
+      // Add event listener to refresh button
+      document
+        .getElementById("refreshRoomsBtn")
+        .addEventListener("click", () => {
+          showRoomAssignments();
+        });
+    })
+    .catch((error) => {
+      console.error("Error fetching room assignments:", error);
+      sectionRooms.innerHTML = `
       <h2 class="mb-4">Resident Room Access</h2>
       <div class="alert alert-danger">
         Error loading room assignments. Please try again.
       </div>
     `;
-  });
+    });
 }
 
 // Fetch users for the user management section
@@ -1361,19 +1452,24 @@ async function fetchUsers() {
   try {
     // Fetch users from API
     const users = await fetch("/users").then((res) => res.json());
-    
+
     // For each user who is a resident, get their room assignment
     for (let i = 0; i < users.length; i++) {
-      if (users[i].role_name === 'resident') {
+      if (users[i].role_name === "resident") {
         try {
-          const room = await smartHomeApi.userRooms.getUserRoom(users[i].user_id);
-          users[i].assignedRoom = room ? `Room ${room.room_number}` : 'None';
+          const room = await smartHomeApi.userRooms.getUserRoom(
+            users[i].user_id
+          );
+          users[i].assignedRoom = room ? `Room ${room.room_number}` : "None";
         } catch (error) {
-          console.error(`Error fetching room for user ${users[i].user_id}:`, error);
-          users[i].assignedRoom = 'Error';
+          console.error(
+            `Error fetching room for user ${users[i].user_id}:`,
+            error
+          );
+          users[i].assignedRoom = "Error";
         }
       } else {
-        users[i].assignedRoom = 'N/A';
+        users[i].assignedRoom = "N/A";
       }
     }
 
@@ -1803,4 +1899,60 @@ function viewAlerts() {
       });
     });
   }, 1000);
+}
+
+/*******************************************
+ * LOGOUT FUNCTIONALITY
+ *******************************************/
+
+async function handleLogout() {
+  try {
+    // Show confirmation modal
+    const confirmModal = new bootstrap.Modal(
+      document.getElementById("logoutConfirmModal")
+    );
+    confirmModal.show();
+
+    // Wait for user confirmation
+    document
+      .getElementById("confirmLogout")
+      .addEventListener("click", async function () {
+        try {
+          // Hide confirmation modal
+          confirmModal.hide();
+
+          // Show loading modal
+          const loadingModal = new bootstrap.Modal(
+            document.getElementById("loadingModal")
+          );
+          loadingModal.show();
+
+          // Clear all local storage items
+          localStorage.clear();
+
+          // Clear any session storage items
+          sessionStorage.clear();
+
+          // Clear any cookies
+          document.cookie.split(";").forEach(function (c) {
+            document.cookie = c
+              .replace(/^ +/, "")
+              .replace(
+                /=.*/,
+                "=;expires=" + new Date().toUTCString() + ";path=/"
+              );
+          });
+
+          // Redirect to login page
+          window.location.href = "/loginpage.html";
+        } catch (error) {
+          console.error("Error during logout:", error);
+          alert("Error logging out. Please try again.");
+          loadingModal.hide();
+        }
+      });
+  } catch (error) {
+    console.error("Error showing confirmation modal:", error);
+    alert("Error during logout process. Please try again.");
+  }
 }

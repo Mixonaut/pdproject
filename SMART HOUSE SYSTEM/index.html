@@ -207,41 +207,62 @@
         <div class="modal-content">
           <div class="modal-header border-0">
             <h5 class="modal-title fs-4">
-              <i class="fas fa-sliders-h me-2"></i>Temperature
+              <i class="fas fa-thermometer-full me-2"></i>Room Temperature
             </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div class="temp-control-wrapper">
               <div class="temp-control-left">
-                <div class="temp-buttons">
-                  <button class="btn temp-btn plus-btn">
-                    <i class="fas fa-plus"></i>
-                  </button>
+                <!-- Temperature Display -->
+                <div class="current-temp-container">
                   <div class="temperature-display">20°C</div>
-                  <button class="btn temp-btn minus-btn">
-                    <i class="fas fa-minus"></i>
-                  </button>
+                  <div id="tempFeedback" class="feedback-message"></div>
                 </div>
-                <div class="thermometer">
-                  <div class="touter">
-                    <div class="tinner"></div>
+
+                <!-- Thermometer and Controls -->
+                <div class="temp-control-center">
+                  <!-- Thermometer -->
+                  <div class="thermometer">
+                    <div class="touter">
+                      <div class="tinner"></div>
+                    </div>
+                  </div>
+
+                  <!-- Temperature buttons -->
+                  <div class="temp-buttons">
+                    <button class="btn temp-btn plus-btn" aria-label="Make Warmer">
+                      <i class="fas fa-plus"></i>
+                      Warmer
+                    </button>
+                    <button class="btn temp-btn minus-btn" aria-label="Make Cooler">
+                      <i class="fas fa-minus"></i>
+                      Cooler
+                    </button>
                   </div>
                 </div>
               </div>
 
               <div class="temp-list-right">
-                <div class="temp-box-cold">9am: 18°C</div>
-                <div class="temp-box-warm">10am: 20°C</div>
-                <div class="temp-box-hot">11am: 22°C</div>
-                <div class="temp-box-hot">12pm: 24°C</div>
-                <div class="temp-box-hot">1pm: 26°C</div>
-                <div class="temp-box-hot">2pm: 28°C</div>
-                <div class="temp-box-hot">3pm: 30°C</div>
+                <h3>Your Daily Schedule</h3>
+                <div class="schedule-help">
+                  <i class="fas fa-info-circle"></i>
+                  Your room will follow this schedule automatically
+                </div>
+                <div class="schedule-adjust">
+                  <p>Adjust my Schedule</p>
+                  <div class="schedule-buttons">
+                    <button class="btn adjust-btn warmer-btn">
+                      <i class="fas fa-arrow-up"></i> Make It Warmer
+                    </button>
+                    <button class="btn adjust-btn cooler-btn">
+                      <i class="fas fa-arrow-down"></i> Make It Cooler
+                    </button>
+                  </div>
+                </div>
+                <div class="schedule-list">
+                  <!-- dynamically rendered with js -->
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,4 @@
 // apiClient.js - Frontend API client for smart home system
-// Place this file in the public/js directory
 
 /**
  * Smart Home API Client
@@ -276,7 +275,7 @@ const smartHomeApi = {
      */
     getAll: async function () {
       try {
-        const response = await fetch("/api/users");
+        const response = await fetch("/users");
         if (!response.ok) throw new Error("Failed to fetch users");
         return await response.json();
       } catch (error) {

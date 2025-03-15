@@ -4,6 +4,7 @@ const app = express();
 const path = require("path");
 const db = require("./db");
 const auth = require("./auth");
+const bcrypt = require("bcrypt");
 
 // Import service modules
 const energyService = require("./energyService");
@@ -492,6 +493,26 @@ app.get("/api/rooms/with-users", async (req, res) => {
   } catch (error) {
     console.error("Error getting rooms with users:", error);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// call to reset password
+app.post("/users/:userId/reset-password", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { password } = req.body;
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update the user's password
+    const sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+    await db.query(sql, [hashedPassword, userId]);
+
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ error: "Failed to reset password" });
   }
 });
 

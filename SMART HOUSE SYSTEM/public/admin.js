@@ -5,17 +5,106 @@
 document.addEventListener("DOMContentLoaded", function () {
   const sectionAnalytics = document.getElementById("sectionAnalytics");
 
-  // Menu buttons
+  // nav buttons
   const btnAnalytics = document.getElementById("btnAnalytics");
   const btnRooms = document.getElementById("btnRooms");
   const btnUsers = document.getElementById("btnUsers");
   const btnLogout = document.getElementById("btnLogout");
 
-  // Add click events to switch sections
+  // wire up nav clicks
   btnAnalytics.addEventListener("click", () => showSection("analytics"));
   btnRooms.addEventListener("click", () => showSection("rooms"));
-  btnUsers.addEventListener("click", () => showSection("users"));
+  btnUsers.addEventListener("click", () => {
+    showSection("users");
+    // need to fetch users here or the table stays empty
+    fetchUsers();
+  });
   btnLogout.addEventListener("click", handleLogout);
+
+  // password reset button - handles the actual reset process
+  const saveNewPasswordBtn = document.getElementById("saveNewPassword");
+  if (saveNewPasswordBtn) {
+    saveNewPasswordBtn.addEventListener("click", handlePasswordReset);
+  }
+
+  // show/hide password toggle
+  const togglePasswordBtn = document.getElementById("togglePassword");
+  if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener("click", function () {
+      const passwordInput = document.getElementById("newPassword");
+      const icon = this.querySelector("i");
+
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+      } else {
+        passwordInput.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+      }
+    });
+  }
+
+  // stop the form from submitting normally
+  const passwordResetForm = document.getElementById("passwordResetForm");
+  if (passwordResetForm) {
+    passwordResetForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      return false;
+    });
+  }
+
+  // user list filters
+  const filterUsername = document.getElementById("filterUsername");
+  const filterRole = document.getElementById("filterRole");
+  const filterRoom = document.getElementById("filterRoom");
+
+  // hook up the filter events
+  if (filterUsername) {
+    filterUsername.addEventListener("input", applyFilters);
+  }
+  if (filterRole) {
+    filterRole.addEventListener("change", applyFilters);
+  }
+  if (filterRoom) {
+    filterRoom.addEventListener("input", applyFilters);
+  }
+
+  // pagination controls
+  const prevPageBtn = document.getElementById("prevPage");
+  const nextPageBtn = document.getElementById("nextPage");
+
+  // previous page handler
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        displayUsers();
+      }
+    });
+  }
+
+  // next page handler
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener("click", () => {
+      const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        displayUsers();
+      }
+    });
+  }
+
+  // restore last active section or default to analytics
+  const lastActiveSection =
+    localStorage.getItem("activeSection") || "analytics";
+  showSection(lastActiveSection);
+
+  // if we're coming back to users section, load the list
+  if (lastActiveSection === "users") {
+    fetchUsers();
+  }
 
   // Initialize Chart.js chart
   initEnergyChart();
@@ -61,17 +150,6 @@ document.addEventListener("DOMContentLoaded", function () {
           button.classList.remove("selected");
         }
       });
-    }
-
-    // Show the last active section or default to analytics
-    const lastActiveSection =
-      localStorage.getItem("activeSection") || "analytics";
-    showSection(lastActiveSection);
-
-    // Only set period and update chart if we're in analytics section
-    if (lastActiveSection === "analytics") {
-      const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
-      setActivePeriod(savedPeriod);
     }
   });
 
@@ -610,6 +688,19 @@ async function viewRoomDetails(roomId) {
       smartHomeApi.userRooms.getUsersByRoom(roomId),
     ]);
 
+    //prevent duplicate device fetch
+    const uniqueDevices = new Map();
+    devices.forEach((device) => {
+      const existingDevice = uniqueDevices.get(device.device_id);
+      if (
+        !existingDevice ||
+        new Date(device.last_updated) > new Date(existingDevice.last_updated)
+      ) {
+        uniqueDevices.set(device.device_id, device);
+      }
+    });
+    const deduplicatedDevices = Array.from(uniqueDevices.values());
+
     // Update modal content with the fetched data
     const modalBody = document.querySelector("#roomDetailModal .modal-body");
     modalBody.innerHTML = `
@@ -663,7 +754,7 @@ async function viewRoomDetails(roomId) {
             </tr>
           </thead>
           <tbody>
-            ${devices
+            ${deduplicatedDevices
               .map(
                 (device) => `
               <tr>
@@ -818,8 +909,21 @@ async function updateDeviceList(roomId) {
     // Fetch updated device list
     const devices = await smartHomeApi.devices.getByRoom(roomId);
 
+    //stop duplicate devicee fetch
+    const uniqueDevices = new Map();
+    devices.forEach((device) => {
+      const existingDevice = uniqueDevices.get(device.device_id);
+      if (
+        !existingDevice ||
+        new Date(device.last_updated) > new Date(existingDevice.last_updated)
+      ) {
+        uniqueDevices.set(device.device_id, device);
+      }
+    });
+    const deduplicatedDevices = Array.from(uniqueDevices.values());
+
     // Update the table with new data
-    deviceTableBody.innerHTML = devices
+    deviceTableBody.innerHTML = deduplicatedDevices
       .map(
         (device) => `
       <tr>
@@ -841,8 +945,8 @@ async function updateDeviceList(roomId) {
             <button class="btn btn-sm btn-danger remove-device"
                     data-device-id="${device.device_id}"
                     data-device-name="${device.device_name}">
-              Remove
-            </button>
+                      Remove
+                    </button>
           </div>
         </td>
       </tr>
@@ -1161,7 +1265,7 @@ async function editUser(userId) {
     loadingModal.show();
 
     // Fetch user details
-    const users = await fetch("/users").then((res) => res.json());
+    const users = await smartHomeApi.users.getAll();
     const user = users.find((u) => u.user_id === parseInt(userId));
 
     if (!user) {
@@ -1585,118 +1689,179 @@ function showRoomAssignments() {
     });
 }
 
+// Global variables for user management
+let allUsers = [];
+let currentPage = 1;
+const usersPerPage = 10;
+let filteredUsers = [];
+
 // Fetch users for the user management section
 async function fetchUsers() {
   const userSection = document.getElementById("sectionUsers");
 
-  // Add loading indicator
+  // show loading spinner while we fetch
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "text-center my-3";
   loadingIndicator.innerHTML =
     '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading users...</span></div>';
 
-  // Find the user list container or create it
-  let userListContainer = userSection.querySelector(".user-list-container");
-  if (!userListContainer) {
-    userListContainer = document.createElement("div");
-    userListContainer.className = "user-list-container card mb-4";
-    userSection.appendChild(userListContainer);
-  }
+  const tableContainer = userSection.querySelector(".table-responsive");
+  if (!tableContainer) return;
 
-  userListContainer.innerHTML = "";
-  userListContainer.appendChild(loadingIndicator);
+  tableContainer.innerHTML = "";
+  tableContainer.appendChild(loadingIndicator);
 
   try {
-    // Fetch users from API
-    const users = await fetch("/users").then((res) => res.json());
+    // get the base user list
+    allUsers = await smartHomeApi.users.getAll();
 
-    // For each user who is a resident, get their room assignment
-    for (let i = 0; i < users.length; i++) {
-      if (users[i].role_name === "resident") {
+    // for residents, we need to look up their room assignments
+    for (let i = 0; i < allUsers.length; i++) {
+      if (allUsers[i].role_name === "resident") {
         try {
           const room = await smartHomeApi.userRooms.getUserRoom(
-            users[i].user_id
+            allUsers[i].user_id
           );
-          users[i].assignedRoom = room ? `Room ${room.room_number}` : "None";
+          allUsers[i].assignedRoom = room ? `Room ${room.room_number}` : "None";
         } catch (error) {
           console.error(
-            `Error fetching room for user ${users[i].user_id}:`,
+            `Error fetching room for user ${allUsers[i].user_id}:`,
             error
           );
-          users[i].assignedRoom = "Error";
+          allUsers[i].assignedRoom = "Error";
         }
       } else {
-        users[i].assignedRoom = "N/A";
+        // non-residents don't have rooms
+        allUsers[i].assignedRoom = "N/A";
       }
     }
 
-    // Remove loading indicator
-    loadingIndicator.remove();
-
-    // Create a table with user data
-    userListContainer.innerHTML = `
-      <div class="card-header">User List</div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Email</th>
-                <th>Room</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${users
-                .map(
-                  (user) => `
-                <tr>
-                  <td>${user.user_id}</td>
-                  <td>${user.username}</td>
-                  <td>${user.role_name}</td>
-                  <td>${user.email || "N/A"}</td>
-                  <td>${user.assignedRoom}</td>
-                  <td>${new Date(user.created_at).toLocaleString()}</td>
-                  <td>
-                    <button class="btn btn-sm btn-warning edit-user" data-user-id="${
-                      user.user_id
-                    }">Edit</button>
-                    <button class="btn btn-sm btn-danger delete-user" data-user-id="${
-                      user.user_id
-                    }">Delete</button>
-                  </td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    // Add event listeners to edit and delete buttons
-    userListContainer.querySelectorAll(".edit-user").forEach((button) => {
-      button.addEventListener("click", () => editUser(button.dataset.userId));
-    });
-
-    userListContainer.querySelectorAll(".delete-user").forEach((button) => {
-      button.addEventListener("click", () => deleteUser(button.dataset.userId));
-    });
+    // apply any active filters and show the list
+    applyFilters();
   } catch (error) {
     console.error("Error fetching users:", error);
-    loadingIndicator.remove();
-    userListContainer.innerHTML = `
-      <div class="card-header">User List</div>
-      <div class="card-body">
-        <div class="alert alert-danger">Error loading users. Please try again later.</div>
-      </div>
-    `;
+    tableContainer.innerHTML =
+      '<div class="alert alert-danger">Error loading users. Please try again later.</div>';
   }
+}
+
+// filter the user list based on search inputs
+function applyFilters() {
+  const usernameFilter = document
+    .getElementById("filterUsername")
+    .value.toLowerCase();
+  const roleFilter = document.getElementById("filterRole").value.toLowerCase();
+  const roomFilter = document.getElementById("filterRoom").value.toLowerCase();
+
+  // match against all active filters
+  filteredUsers = allUsers.filter((user) => {
+    const matchUsername = user.username.toLowerCase().includes(usernameFilter);
+    const matchRole =
+      !roleFilter || user.role_name.toLowerCase() === roleFilter;
+    const matchRoom =
+      !roomFilter ||
+      (user.assignedRoom &&
+        user.assignedRoom.toLowerCase().includes(roomFilter));
+
+    return matchUsername && matchRole && matchRoom;
+  });
+
+  // reset to first page when filters change
+  currentPage = 1;
+  displayUsers();
+}
+
+// render the filtered/paginated user list
+function displayUsers() {
+  const tableContainer = document.querySelector(".table-responsive");
+  if (!tableContainer) return;
+
+  // figure out which chunk of users to show
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = Math.min(startIndex + usersPerPage, filteredUsers.length);
+  const usersToShow = filteredUsers.slice(startIndex, endIndex);
+
+  // update the page counter
+  document.getElementById("currentPage").textContent = currentPage;
+  document.getElementById("totalPages").textContent = totalPages;
+  document.getElementById("prevPage").disabled = currentPage === 1;
+  document.getElementById("nextPage").disabled = currentPage === totalPages;
+
+  // build the table HTML
+  const table = `
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Email</th>
+          <th>Room</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${usersToShow
+          .map(
+            (user) => `
+          <tr>
+            <td>${user.user_id}</td>
+            <td>${user.username}</td>
+            <td><span class="badge" style="background-color: var(--positive-feedback)">${
+              user.role_name
+            }</span></td>
+            <td>${user.email || "N/A"}</td>
+            <td>${user.assignedRoom}</td>
+            <td>${new Date(user.created_at).toLocaleString()}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-success edit-user" data-user-id="${
+                  user.user_id
+                }" title="Edit User" 
+                        style="color: var(--positive-feedback); border-color: var(--positive-feedback)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success reset-password" data-user-id="${
+                  user.user_id
+                }" 
+                        data-username="${user.username}" title="Reset Password"
+                        style="color: var(--positive-feedback); border-color: var(--positive-feedback)">
+                  <i class="fas fa-key"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-user" data-user-id="${
+                  user.user_id
+                }" 
+                        title="Delete User" style="color: var(--accent-color); border-color: var(--accent-color)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+
+  tableContainer.innerHTML = table;
+
+  // wire up the action buttons
+  tableContainer.querySelectorAll(".edit-user").forEach((button) => {
+    button.addEventListener("click", () => editUser(button.dataset.userId));
+  });
+
+  tableContainer.querySelectorAll(".reset-password").forEach((button) => {
+    button.addEventListener("click", () =>
+      showPasswordReset(button.dataset.userId, button.dataset.username)
+    );
+  });
+
+  tableContainer.querySelectorAll(".delete-user").forEach((button) => {
+    button.addEventListener("click", () => deleteUser(button.dataset.userId));
+  });
 }
 
 /*******************************************
@@ -1929,8 +2094,6 @@ async function updateEnergySummary() {
           percentageChange = comparison.percentageChange;
         }
       } else {
-        // For multiple rooms, we would need to calculate aggregate comparison
-        // This is a simplified approach
         const today = totalEnergy;
         const yesterday = today * (1 - (Math.random() * 0.3 - 0.15)); // Mock data: +/- 15%
         percentageChange = ((today - yesterday) / yesterday) * 100;
@@ -2007,7 +2170,6 @@ function viewAlerts() {
   const modal = new bootstrap.Modal(alertsModal);
   modal.show();
 
-  // Simulate getting alerts (would use API in real implementation)
   setTimeout(() => {
     alertsList.innerHTML = `
       <div class="list-group">
@@ -2042,7 +2204,6 @@ function viewAlerts() {
     document.querySelectorAll(".resolve-alert").forEach((button) => {
       button.addEventListener("click", function () {
         const alertId = this.dataset.alertId;
-        // Would call API here: smartHomeApi.alerts.resolve(alertId)
         console.log(`Resolving alert ${alertId}`);
 
         // Remove the alert from the list
@@ -2111,5 +2272,91 @@ async function handleLogout() {
   } catch (error) {
     console.error("Error showing confirmation modal:", error);
     alert("Error during logout process. Please try again.");
+  }
+}
+
+function validatePassword(password) {
+  const errors = [];
+  if (!password || password.length === 0) {
+    errors.push("Password cannot be empty");
+  }
+  return errors;
+}
+
+// modal for password reset
+function showPasswordReset(userId, username) {
+  const modal = new bootstrap.Modal(
+    document.getElementById("passwordResetModal")
+  );
+  document.getElementById("resetUserId").value = userId;
+  document.getElementById("passwordResetForm").reset();
+  document.getElementById("passwordError").classList.add("d-none");
+  document.querySelector(
+    "#passwordResetModal .modal-title"
+  ).textContent = `Reset Password for ${username}`;
+  modal.show();
+}
+
+//
+async function handlePasswordReset() {
+  const userId = document.getElementById("resetUserId").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const errorDiv = document.getElementById("passwordError");
+  const saveButton = document.getElementById("saveNewPassword");
+
+  //
+  errorDiv.classList.add("d-none");
+  errorDiv.textContent = "";
+
+  //
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = "Passwords do not match";
+    errorDiv.classList.remove("d-none");
+    return;
+  }
+
+  const passwordErrors = validatePassword(newPassword);
+  if (passwordErrors.length > 0) {
+    errorDiv.innerHTML = passwordErrors.join("<br>");
+    errorDiv.classList.remove("d-none");
+    return;
+  }
+
+  try {
+    // Show loading state
+    const originalText = saveButton.textContent;
+    saveButton.disabled = true;
+    saveButton.innerHTML =
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Resetting...';
+
+    //call api to reset password
+    const response = await fetch(`/users/${userId}/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: newPassword }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to reset password: ${response.statusText}`);
+    }
+
+    // successful reset
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("passwordResetModal")
+    );
+    modal.hide();
+
+    alert("Password has been reset successfully");
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    errorDiv.textContent = `Failed to reset password: ${error.message}`;
+    errorDiv.classList.remove("d-none");
+  } finally {
+    // Reset button state
+    saveButton.disabled = false;
+    saveButton.textContent = "Reset Password";
   }
 }

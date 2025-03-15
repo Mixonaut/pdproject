@@ -286,19 +286,103 @@
 
       <!-- USER MANAGEMENT SECTION -->
       <div id="sectionUsers" class="d-none">
-        <h2 class="mb-4">User Management</h2>
-        <div class="card mb-4">
-          <div class="card-header">Admin Tools</div>
-          <div class="card-body">
-            <button class="btn btn-success me-2" id="btnAddUser">
-              Add User
-            </button>
-            <button class="btn btn-warning me-2" id="btnEditUser">
-              Edit User
-            </button>
-            <button class="btn btn-danger" id="btnRemoveUser">
-              Remove User
-            </button>
+        <!-- Combined User Management Card -->
+        <div class="card">
+          <div
+            class="card-header"
+            style="
+              background-color: var(--surface-color);
+              color: var(--text-color);
+            "
+          >
+            <h5 class="mb-0 d-flex justify-content-between align-items-center">
+              <span>User Management</span>
+              <button
+                class="btn"
+                id="btnAddUser"
+                style="
+                  background-color: var(--positive-feedback);
+                  color: var(--text-color);
+                "
+              >
+                <i class="fas fa-user-plus"></i> Add User
+              </button>
+            </h5>
+          </div>
+          <div
+            class="card-body"
+            style="
+              background-color: var(--background-color);
+              color: var(--text-color);
+            "
+          >
+            <!-- Filters -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label for="filterUsername" class="form-label">Username</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="filterUsername"
+                    placeholder="Search by username..."
+                  />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="filterRole" class="form-label">Role</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fas fa-user-tag"></i>
+                  </span>
+                  <select class="form-select" id="filterRole">
+                    <option value="">All Roles</option>
+                    <option value="resident">Resident</option>
+                    <option value="staff">Staff</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="filterRoom" class="form-label">Room Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="fas fa-door-open"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="filterRoom"
+                    placeholder="Search by room..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- User List -->
+            <div class="table-responsive">
+              <!-- Table will be populated by JavaScript -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span
+                >Page <span id="currentPage">1</span> of
+                <span id="totalPages">1</span></span
+              >
+              <div class="btn-group">
+                <button class="btn btn-outline-success" id="prevPage">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="btn btn-outline-success" id="nextPage">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -322,6 +406,82 @@
             <p class="text-muted">
               Please wait while we fetch the latest information.
             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div class="modal fade" id="passwordResetModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div
+          class="modal-content"
+          style="
+            background-color: var(--background-color);
+            color: var(--text-color);
+          "
+        >
+          <div
+            class="modal-header"
+            style="
+              background-color: var(--surface-color);
+              border-bottom-color: var(--border-contrast);
+            "
+          >
+            <h5 class="modal-title">Reset User Password</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              style="color: var(--text-color)"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="passwordResetForm" onsubmit="return false;">
+              <input type="hidden" id="resetUserId" />
+              <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <div class="input-group">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="newPassword"
+                    required
+                  />
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    id="togglePassword"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label"
+                  >Confirm Password</label
+                >
+                <input
+                  type="password"
+                  class="form-control"
+                  id="confirmPassword"
+                  required
+                />
+              </div>
+              <div class="alert alert-danger d-none" id="passwordError"></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" id="saveNewPassword">
+              Reset Password
+            </button>
           </div>
         </div>
       </div>

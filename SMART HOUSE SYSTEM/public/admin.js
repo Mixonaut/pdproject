@@ -109,6 +109,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize Chart.js chart
   initEnergyChart();
 
+  // save to local storage to stop page reloads
+  const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
+  setActivePeriod(savedPeriod);
+
   // Initialize date inputs with current date
   const today = new Date().toISOString().split("T")[0];
   const dayInput = document.getElementById("dayInput");
@@ -214,7 +218,8 @@ function showSection(section) {
   // Show the requested section
   if (section === "analytics") {
     sectionAnalytics.classList.remove("d-none");
-    updateEnergySummary(); // Refresh data when showing analytics
+    const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
+    setActivePeriod(savedPeriod);
   } else if (section === "rooms") {
     sectionRooms.classList.remove("d-none");
     showRoomAssignments(); // Show room assignments when viewing rooms section

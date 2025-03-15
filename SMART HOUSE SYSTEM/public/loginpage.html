@@ -120,39 +120,48 @@
             });
 
             // Get the response text
-            const result = await response.text();
+            const responseText = await response.text();
+            let result;
 
-            // Debug information
+            try {
+              //parse response as json
+              result = JSON.parse(responseText);
+            } catch (e) {
+              //use raw text otherwise
+              result = responseText;
+            }
+
+            //debug
             console.log("Response status:", response.status);
-            console.log("Response text:", result);
+            console.log("Response data:", result);
 
-            // Show debug info (can be removed in production)
+            //rmeove this soon
             debugInfo.style.display = "block";
             debugInfo.innerHTML = `
-                    Response status: ${response.status}<br>
-                    Response text: "${result}"<br>
-                    Text length: ${result.length}<br>
-                    === "Sucadmin": ${result === "Sucadmin"}<br>
-                    === "Success": ${result === "Success"}<br>
-                `;
+                Response status: ${response.status}<br>
+                Response data: ${JSON.stringify(result)}<br>
+            `;
 
-            // Handle the response
+            //handle response
             if (response.ok) {
               messageDiv.textContent = "Login successful!";
               messageDiv.style.color = "green";
 
-              // Redirect based on response
-              if (result.trim() === "Sucadmin") {
-                // Wait a moment to show the success message
+              //json response
+              if (typeof result === "object" && result.success) {
+                setTimeout(() => {
+                  window.location.href = result.redirectUrl || "/app";
+                }, 1000);
+              } else if (result === "Sucadmin") {
                 setTimeout(() => {
                   window.location.href = "/admin";
                 }, 1000);
-              } else if (result.trim() === "Success") {
+              } else if (result === "Success") {
                 setTimeout(() => {
                   window.location.href = "/app";
                 }, 1000);
               } else {
-                messageDiv.textContent = `Unexpected response: ${result}`;
+                messageDiv.textContent = "Unexpected response format";
                 messageDiv.style.color = "orange";
               }
             } else {

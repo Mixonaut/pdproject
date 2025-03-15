@@ -16,10 +16,62 @@ document.addEventListener("DOMContentLoaded", function () {
   btnRooms.addEventListener("click", () => showSection("rooms"));
   btnUsers.addEventListener("click", () => {
     showSection("users");
-    // need to fetch users here or the table stays empty
     fetchUsers();
   });
   btnLogout.addEventListener("click", handleLogout);
+
+  //init energy chart
+  initEnergyChart();
+
+  //restore default settings
+  const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
+  const savedRoomSelections = JSON.parse(
+    localStorage.getItem("selectedRooms") || '["All"]'
+  );
+
+  //init date inputs
+  const today = new Date().toISOString().split("T")[0];
+  const dayInput = document.getElementById("dayInput");
+  if (dayInput) {
+    dayInput.value = localStorage.getItem("selectedDay") || today;
+  }
+
+  const monthSelect = document.getElementById("monthSelect");
+  const yearSelect = document.getElementById("yearSelect");
+
+  if (monthSelect) {
+    const savedMonth =
+      localStorage.getItem("selectedMonth") ||
+      (new Date().getMonth() + 1).toString();
+    monthSelect.value = savedMonth;
+  }
+
+  if (yearSelect) {
+    const savedYear =
+      localStorage.getItem("selectedYear") ||
+      new Date().getFullYear().toString();
+    yearSelect.value = savedYear;
+  }
+
+  //fetch and populate rooms
+  fetchAndPopulateRooms().then(() => {
+    //restore room selections
+    const roomsSelect = document.getElementById("roomsSelect");
+    if (roomsSelect) {
+      roomsSelect.querySelectorAll(".roomLabel").forEach((button) => {
+        if (savedRoomSelections.includes(button.value)) {
+          button.classList.add("selected");
+        } else {
+          button.classList.remove("selected");
+        }
+      });
+    }
+
+    //set active period
+    setActivePeriod(savedPeriod);
+    setChartData(savedPeriod);
+    updateEnergySummary();
+  });
 
   // password reset button - handles the actual reset process
   const saveNewPasswordBtn = document.getElementById("saveNewPassword");
@@ -105,57 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (lastActiveSection === "users") {
     fetchUsers();
   }
-
-  // Initialize Chart.js chart
-  initEnergyChart();
-
-  // save to local storage to stop page reloads
-  const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
-  setActivePeriod(savedPeriod);
-
-  // Initialize date inputs with current date
-  const today = new Date().toISOString().split("T")[0];
-  const dayInput = document.getElementById("dayInput");
-  if (dayInput) {
-    dayInput.value = localStorage.getItem("selectedDay") || today;
-  }
-
-  // Initialize month and year selects with saved values or defaults
-  const monthSelect = document.getElementById("monthSelect");
-  const yearSelect = document.getElementById("yearSelect");
-
-  if (monthSelect) {
-    const savedMonth =
-      localStorage.getItem("selectedMonth") ||
-      (new Date().getMonth() + 1).toString();
-    monthSelect.value = savedMonth;
-  }
-
-  if (yearSelect) {
-    const savedYear =
-      localStorage.getItem("selectedYear") ||
-      new Date().getFullYear().toString();
-    yearSelect.value = savedYear;
-  }
-
-  // Fetch and populate rooms, then restore selections
-  fetchAndPopulateRooms().then(() => {
-    // Restore room selections from localStorage
-    const savedRoomSelections = JSON.parse(
-      localStorage.getItem("selectedRooms") || '["All"]'
-    );
-    const roomsSelect = document.getElementById("roomsSelect");
-
-    if (roomsSelect) {
-      roomsSelect.querySelectorAll(".roomLabel").forEach((button) => {
-        if (savedRoomSelections.includes(button.value)) {
-          button.classList.add("selected");
-        } else {
-          button.classList.remove("selected");
-        }
-      });
-    }
-  });
 
   // Set up event listeners for saving selections
   if (dayInput) {

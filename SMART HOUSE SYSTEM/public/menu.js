@@ -184,17 +184,247 @@ document.addEventListener("DOMContentLoaded", async () => {
     button.addEventListener("click", resetModal);
   });
 
-  // Restore saved temperature
-  const savedTemp = localStorage.getItem("savedTemperature");
-  if (savedTemp) {
+  /*************************************************************
+   * TEMP CONTROL MODAL
+   *************************************************************/
+  //inti temp control
+  const initializeTemperatureControl = async () => {
     const display = document.querySelector(".temperature-display");
     const mercury = document.querySelector(".tinner");
-    const temp = parseInt(savedTemp);
+    const scheduleContainer = document.querySelector(".schedule-list");
 
-    if (display && mercury) {
+    //schedule with rough timings
+    let schedule = [
+      {
+        time: "Morning",
+        displayTime: "7am - 9am",
+        startHour: 7,
+        endHour: 9,
+        temp: 20,
+        icon: "fa-sun",
+      },
+      {
+        time: "Day",
+        displayTime: "9am - 4pm",
+        startHour: 9,
+        endHour: 16,
+        temp: 22,
+        icon: "fa-sun",
+      },
+      {
+        time: "Evening",
+        displayTime: "4pm - 10pm",
+        startHour: 16,
+        endHour: 22,
+        temp: 21,
+        icon: "fa-sun",
+      },
+      {
+        time: "Night",
+        displayTime: "10pm - 7am",
+        startHour: 22,
+        endHour: 7,
+        temp: 18,
+        icon: "fa-moon",
+      },
+    ];
+
+    //gets current schedule period
+    const getCurrentPeriod = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      //find matching period
+      const currentPeriod = schedule.find((period) => {
+        if (period.startHour < period.endHour) {
+          //day period
+          return (
+            currentHour >= period.startHour && currentHour < period.endHour
+          );
+        } else {
+          //overnight period
+          return (
+            currentHour >= period.startHour || currentHour < period.endHour
+          );
+        }
+      });
+
+      return currentPeriod || schedule[0];
+    };
+
+    //update temp display
+    const updateTemperatureDisplay = (temp) => {
       display.textContent = `${temp}°C`;
       mercury.style.height = `${(temp / 30) * 100}%`;
+    };
+
+    //update schedule display
+    const updateScheduleDisplay = () => {
+      if (scheduleContainer) {
+        scheduleContainer.innerHTML = "";
+        const currentPeriod = getCurrentPeriod();
+
+        schedule.forEach((period) => {
+          const scheduleItem = document.createElement("div");
+          scheduleItem.className = `schedule-item ${
+            period.temp <= 19
+              ? "temp-box-cold"
+              : period.temp <= 22
+              ? "temp-box-warm"
+              : "temp-box-hot"
+          }`;
+
+          //highlight current schedule period
+          if (period.time === currentPeriod.time) {
+            scheduleItem.classList.add("current-period");
+          }
+
+          scheduleItem.innerHTML = `
+            <div class="schedule-period">
+              <strong>${period.time}</strong>
+              <div class="schedule-time">${period.displayTime}</div>
+            </div>
+            <div class="schedule-temp">
+              <i class="fas ${period.icon}"></i>
+              ${period.temp}°C
+            </div>
+          `;
+          scheduleContainer.appendChild(scheduleItem);
+        });
+      }
+    };
+
+    //init temp based on schedule or user override
+    const initializeTemperature = () => {
+      const savedTemp = localStorage.getItem("savedTemperature");
+      const lastChangeTime = localStorage.getItem("lastTempChangeTime");
+      const currentPeriod = getCurrentPeriod();
+
+      //check if there is a saved temp
+      if (savedTemp && lastChangeTime) {
+        const changeTime = new Date(parseInt(lastChangeTime));
+        const now = new Date();
+        const hoursSinceChange = (now - changeTime) / (1000 * 60 * 60);
+
+        if (hoursSinceChange < 4) {
+          //reset after 4 hours
+          const temp = parseInt(savedTemp);
+          if (temp >= 16 && temp <= 26) {
+            updateTemperatureDisplay(temp);
+            return;
+          }
+        }
+      }
+
+      updateTemperatureDisplay(currentPeriod.temp);
+    };
+
+    //init display
+    updateScheduleDisplay();
+    initializeTemperature();
+
+    //handle schedule adjustment buttons
+    document.querySelectorAll(".adjust-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const isWarmer = btn.classList.contains("warmer-btn");
+        const step = 1;
+
+        //update all temps in schedule
+        schedule = schedule.map((period) => ({
+          ...period,
+          temp: isWarmer
+            ? Math.min(period.temp + step, 26)
+            : Math.max(period.temp - step, 16),
+        }));
+
+        //save to local storage
+        localStorage.setItem("savedSchedule", JSON.stringify(schedule));
+
+        //update temp display
+        updateScheduleDisplay();
+        initializeTemperature();
+
+        setTimeout(() => {
+          feedbackMsg.style.display = "none";
+        }, 2000);
+      });
+    });
+
+    //temp control buttons
+    document.querySelectorAll(".plus-btn, .minus-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        try {
+          const currentTemp = parseInt(display.textContent);
+          const step = 1;
+          const newTemp = e.target.closest(".plus-btn")
+            ? Math.min(currentTemp + step, 26)
+            : Math.max(currentTemp - step, 16);
+
+          //update temp display
+          updateTemperatureDisplay(newTemp);
+
+          //save temp to local storage
+          localStorage.setItem("savedTemperature", newTemp.toString());
+          localStorage.setItem("lastTempChangeTime", Date.now().toString());
+
+          setTimeout(() => {
+            feedbackMsg.style.display = "none";
+          }, 2000);
+        } catch (error) {
+          console.error("Error updating temperature:", error);
+          alert("Unable to change temperature. Please try again.");
+        }
+      });
+    });
+
+    //save to local storage
+    const savedSchedule = localStorage.getItem("savedSchedule");
+    if (savedSchedule) {
+      try {
+        const parsedSchedule = JSON.parse(savedSchedule);
+        //error checking for schedule
+        if (
+          parsedSchedule.every(
+            (period) =>
+              period.time &&
+              period.displayTime &&
+              period.startHour !== undefined &&
+              period.endHour !== undefined &&
+              period.temp &&
+              period.icon
+          )
+        ) {
+          schedule = parsedSchedule;
+          updateScheduleDisplay();
+          initializeTemperature();
+        }
+      } catch (error) {
+        console.error("Error loading saved schedule:", error);
+      }
     }
+
+    //update temp periodically to match schedule
+    setInterval(() => {
+      const lastChangeTime = localStorage.getItem("lastTempChangeTime");
+      if (lastChangeTime) {
+        const changeTime = new Date(parseInt(lastChangeTime));
+        const now = new Date();
+        const hoursSinceChange = (now - changeTime) / (1000 * 60 * 60);
+
+        //reset temp to schedule after 4 hours
+        if (hoursSinceChange >= 4) {
+          localStorage.removeItem("savedTemperature");
+          localStorage.removeItem("lastTempChangeTime");
+          initializeTemperature();
+        }
+      }
+    }, 60000);
+  };
+
+  // init temp control
+  const tempModal = document.getElementById("tempModal");
+  if (tempModal) {
+    tempModal.addEventListener("shown.bs.modal", initializeTemperatureControl);
   }
 
   // Fall alert Logic
@@ -250,23 +480,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 10);
       }, 300);
     }, 5000); //
-  });
-});
-
-// thermometer buttons
-document.querySelectorAll(".plus-btn, .minus-btn").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    const display = document.querySelector(".temperature-display");
-    const mercury = document.querySelector(".tinner");
-    let temp = parseInt(display.textContent);
-
-    if (e.target.closest(".plus-btn") && temp < 30) temp++;
-    if (e.target.closest(".minus-btn") && temp > 0) temp--;
-
-    display.textContent = `${temp}°C`;
-    mercury.style.height = `${(temp / 30) * 100}%`;
-
-    // Save the temperature to localStorage
-    localStorage.setItem("savedTemperature", temp.toString());
   });
 });

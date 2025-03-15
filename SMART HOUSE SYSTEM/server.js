@@ -284,16 +284,11 @@ app.get("/api/rooms/:roomId/energy", async (req, res) => {
   try {
     const { roomId } = req.params;
     const { period, date } = req.query;
-
-    const energyData = await energyService.getEnergyUsageByRoom(
-      roomId,
-      period,
-      date
-    );
-    res.json(energyData);
+    const data = await energyService.getEnergyUsageByRoom(roomId, period, date);
+    res.json(data);
   } catch (error) {
-    console.error("Error fetching energy data:", error);
-    res.status(500).json({ error: "Failed to fetch energy data" });
+    console.error("Error fetching energy usage:", error);
+    res.status(500).json({ error: "Failed to fetch energy usage" });
   }
 });
 
@@ -301,7 +296,6 @@ app.get("/api/rooms/:roomId/energy/summary", async (req, res) => {
   try {
     const { roomId } = req.params;
     const { period } = req.query;
-
     const summary = await energyService.getEnergySummary(roomId, period);
     res.json(summary);
   } catch (error) {
@@ -314,12 +308,11 @@ app.get("/api/rooms/:roomId/energy/comparison", async (req, res) => {
   try {
     const { roomId } = req.params;
     const { period } = req.query;
-
     const comparison = await energyService.compareEnergyUsage(roomId, period);
     res.json(comparison);
   } catch (error) {
-    console.error("Error comparing energy usage:", error);
-    res.status(500).json({ error: "Failed to compare energy usage" });
+    console.error("Error fetching energy comparison:", error);
+    res.status(500).json({ error: "Failed to fetch energy comparison" });
   }
 });
 
@@ -327,12 +320,8 @@ app.get("/api/rooms/:roomId/energy/by-device-type", async (req, res) => {
   try {
     const { roomId } = req.params;
     const { period } = req.query;
-
-    const deviceTypeData = await energyService.getEnergyByDeviceType(
-      roomId,
-      period
-    );
-    res.json(deviceTypeData);
+    const data = await energyService.getEnergyByDeviceType(roomId, period);
+    res.json(data);
   } catch (error) {
     console.error("Error fetching energy by device type:", error);
     res.status(500).json({ error: "Failed to fetch energy by device type" });

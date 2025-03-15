@@ -222,7 +222,7 @@ input:checked + .toggle-slider:before {
   transform: translateX(-50%);
   width: 70%;
   height: 50%;
-  background: linear-gradient(to top, --secondary-color var(--primary-color));
+  background: linear-gradient(to top, #00b4d8, #0077b6);
   border-radius: 15px 15px 0 0;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -640,3 +640,50 @@ input:checked + .toggle-slider:before {
   font-size: 12px;
   font-weight: bold;
 }
+
+
+body.high-contrast {
+  --background-color: #000;
+  --text-color: #fff;
+  --primary-color: #ffeb3b;
+}
+
+
+body.font-small {
+  font-size: 14px;
+}
+
+body.font-medium {
+  font-size: 16px;
+}
+
+body.font-large {
+  font-size: 18px;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-section h4 {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+.toggle-item {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 16px; 
+}
+
+.toggle-content {
+  flex: 1;
+}
+
+.toggle-explanation {
+  font-size: medium;
+  font-weight: lighter;
+  color: #ccc; 
+  margin: 4px 0 0 0; 
+}
+

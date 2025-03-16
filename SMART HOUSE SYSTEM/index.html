@@ -349,44 +349,71 @@
         </div>
       </div>
     </div>  
-
-     <!--SETTINGS MODAL-->
-     <div class="modal fade" id="settingsModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header border-0">
-            <h5 class="modal-title fs-4">
-              <i class="fas fa-sliders-h me-2"></i>Settings
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+<!-- SETTINGS MODAL -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fs-4">
+          <i class="fas fa-cog me-2"></i>Settings
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- IT Support Button -->
+        <div class="itSupContainer">
+          <button type="button" class="btn modal-menu-button" id="itHelpButton">
+            Call IT Support <i class="fa-solid fa-laptop"></i>
+          </button>
+          <div class="alert alert-success fade mt-3" id="itHelpmsg" role="alert" style="display: none">
+            <i class="fas fa-check-circle me-2"></i> IT professional is on their way
           </div>
-          <div class="modal-body">
-            <div class="itSupContainer">
-              <button type="button" class="btn modal-menu-button" id="itHelpButton">Contact IT Support <i class="fa-solid fa-laptop"></i></button>
-             <div
-               class="alert alert-success fade mt-3"
-               id="itHelpmsg"
-               role="alert"
-               style="display: none"
-               >
-              <i class="fas fa-check-circle me-2"></i> IT professional is on their way
-             </div>
+        </div>
+
+<!-- Account Settings Section -->
+<div class="settings-section">
+  <h4 style="color:white">
+    <i class="fa-solid fa-user me-2" style="color:white; padding-top:20px"></i>Account Settings
+  </h4>
+  <div class="toggle-container">
+    <div class="toggle-item">
+      <div class="toggle-content">
+        <span>Anonymous Mode</span>
+        <p class="toggle-explanation">Hides your name on the energy rankings</p>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="showRankingToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+</div>
+
+        <!-- Accessibility Section -->
+        <div class="settings-section">
+          <h4 style="color:white"><i class="fa-solid fa-eye me-2" style="color:white"></i>Accessibility</h4>
+          <div class="toggle-container">
+            <div class="toggle-item">
+              <span>High Contrast Mode</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="highContrastToggle">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
-
-            
-          </div>
-            <button type="button" class="btn modal-menu-button">Account Settings <i class="fa-solid fa-user"></i></button>
-            <button type="button" class="btn modal-menu-button">Accesibility <i class="fa-solid fa-eye"></i></button>
+            <div class="toggle-item">
+              <span>Font Size</span>
+              <select class="form-select">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-
+  </div>
+</div>
     
     
 

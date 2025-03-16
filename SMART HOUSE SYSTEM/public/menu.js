@@ -1,16 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // Get current user's room
   let currentRoom = null;
   let currentUser = null;
 
-  const resetModal = () => {
-    document.querySelector(".main-menu").style.display = "block";
-    document
-      .querySelectorAll(".sub-menu")
-      .forEach((menu) => (menu.style.display = "none"));
-  };
-
-  // Function to show error message in room control modal
+  // ======================
+  // ROOM CONTROL FUNCTIONS
+  // ======================
   const showRoomControlError = (message) => {
     const errorAlert = document.getElementById("deviceLoadError");
     if (errorAlert) {
@@ -19,56 +13,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // Initialize user and room
-  try {
-    currentUser = await smartHomeApi.users.getCurrentUser();
-    if (currentUser && currentUser.role_name === "resident") {
-      currentRoom = await smartHomeApi.userRooms.getUserRoom(
-        currentUser.user_id
-      );
-      if (!currentRoom) {
-        showRoomControlError(
-          "No room assigned to your account. Please contact staff."
-        );
-      }
-    } else {
-      showRoomControlError(
-        "You must be logged in as a resident to control devices."
-      );
-    }
-  } catch (error) {
-    console.error("Error initializing user and room:", error);
-    showRoomControlError(
-      "Error loading your account information. Please try logging in again."
-    );
-  }
-
-  // Function to load devices for a specific type
   const loadDevices = async (deviceType) => {
     if (!currentUser || !currentRoom) {
-      showRoomControlError("Please log in as a resident to control devices.");
+      showRoomControlError("Please log in to access controls");
       return;
     }
 
     const spinner = document.getElementById("deviceLoadingSpinner");
     const errorAlert = document.getElementById("deviceLoadError");
-    const container = document.querySelector(
-      `#${deviceType} .toggle-container`
-    );
-
-    if (!container) {
-      console.error(`Container for ${deviceType} not found`);
-      return;
-    }
+    const container = document.querySelector(`#${deviceType} .toggle-container`);
 
     try {
       spinner.style.display = "block";
       errorAlert.style.display = "none";
 
-      // Get devices for the room
       const devices = await smartHomeApi.devices.getByRoom(currentRoom.room_id);
-
-      // Filter devices by type and remove duplicates
       const typeMapping = {
         "lights-control": "light",
         "shutters-control": "blind",
@@ -76,189 +35,165 @@ document.addEventListener("DOMContentLoaded", async () => {
         "other-control": "other",
       };
 
-      // Create a Map to store unique devices by ID, keeping only the most recently updated one
-      const uniqueDevices = new Map();
-      devices.forEach((device) => {
-        const existingDevice = uniqueDevices.get(device.device_id);
-        if (
-          !existingDevice ||
-          new Date(device.last_updated) > new Date(existingDevice.last_updated)
-        ) {
-          uniqueDevices.set(device.device_id, device);
+      const filteredDevices = devices.filter((device) => {
+        if (deviceType === "other-control") {
+          return !["light", "blind", "thermostat"].includes(device.device_type);
         }
+        return device.device_type === typeMapping[deviceType];
       });
 
-      const filteredDevices = Array.from(uniqueDevices.values()).filter(
-        (device) => {
-          if (deviceType === "other-control") {
-            return !["light", "blind", "thermostat"].includes(
-              device.device_type
+      container.innerHTML = filteredDevices.length
+        ? filteredDevices
+            .map(
+              (device) => `
+            <div class="toggle-item">
+              <span>${device.device_name}</span>
+              <label class="toggle-switch">
+                <input type="checkbox" data-device-id="${device.device_id}" ${
+                device.status === "on" ? "checked" : ""
+              } />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          `
+            )
+            .join("")
+        : '<div class="alert alert-info">No devices found</div>';
+
+      container.querySelectorAll("input[type='checkbox']").forEach((toggle) => {
+        toggle.addEventListener("change", async (e) => {
+          try {
+            await smartHomeApi.devices.updateStatus(
+              e.target.dataset.deviceId,
+              e.target.checked ? "on" : "off"
             );
+          } catch (error) {
+            e.target.checked = !e.target.checked;
+            alert("Error updating device status. Please try again.");
           }
-          return device.device_type === typeMapping[deviceType];
-        }
-      );
-
-      // Clear existing devices
-      container.innerHTML = "";
-
-      if (filteredDevices.length === 0) {
-        const noDevicesMsg = document.createElement("div");
-        noDevicesMsg.className = "alert alert-info";
-        noDevicesMsg.textContent =
-          "No devices of this type found in your room.";
-        container.appendChild(noDevicesMsg);
-      } else {
-        // Add devices
-        filteredDevices.forEach((device) => {
-          const deviceElement = document.createElement("div");
-          deviceElement.className = "toggle-item";
-          deviceElement.innerHTML = `
-            <span>${device.device_name}</span>
-            <label class="toggle-switch">
-              <input type="checkbox" data-device-id="${device.device_id}" ${
-            device.status === "on" ? "checked" : ""
-          } />
-              <span class="toggle-slider"></span>
-            </label>
-          `;
-
-          // Add event listener for toggle
-          const toggle = deviceElement.querySelector('input[type="checkbox"]');
-          toggle.addEventListener("change", async (e) => {
-            try {
-              const newStatus = e.target.checked ? "on" : "off";
-              await smartHomeApi.devices.updateStatus(
-                device.device_id,
-                newStatus
-              );
-            } catch (error) {
-              console.error("Error updating device status:", error);
-              // Revert toggle if update fails
-              e.target.checked = !e.target.checked;
-              alert("Error updating device status. Please try again.");
-            }
-          });
-
-          container.appendChild(deviceElement);
         });
-      }
-
-      spinner.style.display = "none";
+      });
     } catch (error) {
-      console.error("Error loading devices:", error);
-      spinner.style.display = "none";
       errorAlert.textContent = "Error loading devices. Please try again later.";
       errorAlert.style.display = "block";
+    } finally {
+      spinner.style.display = "none";
     }
   };
 
-  // Set up modal event listeners
+  // Room Control Modal Handlers
   const roomModal = document.getElementById("roomControlModal");
   if (roomModal) {
-    roomModal.addEventListener("shown.bs.modal", resetModal);
-    roomModal.addEventListener("hidden.bs.modal", resetModal);
+    roomModal.addEventListener("shown.bs.modal", () => {
+      document.querySelector("#roomControlModal .main-menu").style.display = "block";
+      document.querySelectorAll("#roomControlModal .sub-menu").forEach((menu) => (menu.style.display = "none"));
+    });
+
+    roomModal.addEventListener("hidden.bs.modal", () => {
+      document.querySelector("#roomControlModal .main-menu").style.display = "block";
+      document.querySelectorAll("#roomControlModal .sub-menu").forEach((menu) => (menu.style.display = "none"));
+    });
+
+    document.querySelectorAll("#roomControlModal .modal-menu-button").forEach((button) => {
+      button.addEventListener("click", async (e) => {
+        const target = e.currentTarget.dataset.target;
+        document.querySelector("#roomControlModal .main-menu").style.display = "none";
+        document.querySelectorAll("#roomControlModal .sub-menu").forEach((menu) => (menu.style.display = "none"));
+        document.querySelector(`#${target}`).style.display = "block";
+        if (currentUser && currentRoom) await loadDevices(target);
+      });
+    });
+
+    document.querySelectorAll("#roomControlModal .btn-back").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelector("#roomControlModal .main-menu").style.display = "block";
+        document.querySelectorAll("#roomControlModal .sub-menu").forEach((menu) => (menu.style.display = "none"));
+      });
+    });
   }
 
-  // Load devices when a category is selected
-  document.querySelectorAll(".modal-menu-button").forEach((button) => {
-    button.addEventListener("click", async (e) => {
-      const target = e.currentTarget.dataset.target;
-      if (!target) return;
+  // =====================
+  // SETTINGS FUNCTIONS
+  // =====================
+  const settingsModal = document.getElementById("settingsModal");
+  if (settingsModal) {
+    // high contrast 
+    const highContrastToggle = document.getElementById("highContrastToggle");
+    if (highContrastToggle) {
+      highContrastToggle.addEventListener("change", (e) => {
+        document.body.classList.toggle("high-contrast", e.target.checked);
+        localStorage.setItem("highContrast", e.target.checked);
+      });
 
-      document.querySelector(".main-menu").style.display = "none";
-      document
-        .querySelectorAll(".sub-menu")
-        .forEach((menu) => (menu.style.display = "none"));
+      highContrastToggle.checked = localStorage.getItem("highContrast") === "true";
+    }
 
-      const targetMenu = document.getElementById(target);
-      if (targetMenu) {
-        targetMenu.style.display = "block";
-        await loadDevices(target);
-      }
-    });
-  });
+    // font size
+    const fontSizeSelect = settingsModal.querySelector("select");
+    if (fontSizeSelect) {
+      fontSizeSelect.addEventListener("change", (e) => {
+        document.body.classList.remove("font-small", "font-medium", "font-large");
+        document.body.classList.add(`font-${e.target.value}`);
+        localStorage.setItem("fontSize", e.target.value);
+      });
 
-  // Back button functionality
-  document.querySelectorAll(".btn-back").forEach((button) => {
-    button.addEventListener("click", resetModal);
-  });
+      const savedFontSize = localStorage.getItem("fontSize") || "medium";
+      fontSizeSelect.value = savedFontSize;
+      document.body.classList.add(`font-${savedFontSize}`);
+    }
 
-  /*************************************************************
-   * TEMP CONTROL MODAL
-   *************************************************************/
-  //inti temp control
+
+  }
+
+  // =====================
+  // USER INITIALIZATION
+  // =====================
+  try {
+    currentUser = await smartHomeApi.users.getCurrentUser();
+    if (currentUser && currentUser.role_name === "resident") {
+      currentRoom = await smartHomeApi.userRooms.getUserRoom(currentUser.user_id);
+    }
+  } catch (error) {
+    console.error("Error initializing user and room:", error);
+    showRoomControlError("Error loading your account information. Please try logging in again.");
+  }
+
+  // =====================
+  // OTHER FUNCTIONALITY
+  // =====================
+  // Temperature Control (unchanged)
   const initializeTemperatureControl = async () => {
     const display = document.querySelector(".temperature-display");
     const mercury = document.querySelector(".tinner");
     const scheduleContainer = document.querySelector(".schedule-list");
 
-    //schedule with rough timings
     let schedule = [
-      {
-        time: "Morning",
-        displayTime: "7am - 9am",
-        startHour: 7,
-        endHour: 9,
-        temp: 20,
-        icon: "fa-sun",
-      },
-      {
-        time: "Day",
-        displayTime: "9am - 4pm",
-        startHour: 9,
-        endHour: 16,
-        temp: 22,
-        icon: "fa-sun",
-      },
-      {
-        time: "Evening",
-        displayTime: "4pm - 10pm",
-        startHour: 16,
-        endHour: 22,
-        temp: 21,
-        icon: "fa-sun",
-      },
-      {
-        time: "Night",
-        displayTime: "10pm - 7am",
-        startHour: 22,
-        endHour: 7,
-        temp: 18,
-        icon: "fa-moon",
-      },
+      { time: "Morning", displayTime: "7am - 9am", startHour: 7, endHour: 9, temp: 20, icon: "fa-sun" },
+      { time: "Day", displayTime: "9am - 4pm", startHour: 9, endHour: 16, temp: 22, icon: "fa-sun" },
+      { time: "Evening", displayTime: "4pm - 10pm", startHour: 16, endHour: 22, temp: 21, icon: "fa-sun" },
+      { time: "Night", displayTime: "10pm - 7am", startHour: 22, endHour: 7, temp: 18, icon: "fa-moon" },
     ];
 
-    //gets current schedule period
     const getCurrentPeriod = () => {
       const now = new Date();
       const currentHour = now.getHours();
 
-      //find matching period
       const currentPeriod = schedule.find((period) => {
         if (period.startHour < period.endHour) {
-          //day period
-          return (
-            currentHour >= period.startHour && currentHour < period.endHour
-          );
+          return currentHour >= period.startHour && currentHour < period.endHour;
         } else {
-          //overnight period
-          return (
-            currentHour >= period.startHour || currentHour < period.endHour
-          );
+          return currentHour >= period.startHour || currentHour < period.endHour;
         }
       });
 
       return currentPeriod || schedule[0];
     };
 
-    //update temp display
     const updateTemperatureDisplay = (temp) => {
       display.textContent = `${temp}°C`;
       mercury.style.height = `${(temp / 30) * 100}%`;
     };
 
-    //update schedule display
     const updateScheduleDisplay = () => {
       if (scheduleContainer) {
         scheduleContainer.innerHTML = "";
@@ -274,7 +209,6 @@ document.addEventListener("DOMContentLoaded", async () => {
               : "temp-box-hot"
           }`;
 
-          //highlight current schedule period
           if (period.time === currentPeriod.time) {
             scheduleItem.classList.add("current-period");
           }
@@ -294,20 +228,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
 
-    //init temp based on schedule or user override
     const initializeTemperature = () => {
       const savedTemp = localStorage.getItem("savedTemperature");
       const lastChangeTime = localStorage.getItem("lastTempChangeTime");
       const currentPeriod = getCurrentPeriod();
 
-      //check if there is a saved temp
       if (savedTemp && lastChangeTime) {
         const changeTime = new Date(parseInt(lastChangeTime));
         const now = new Date();
         const hoursSinceChange = (now - changeTime) / (1000 * 60 * 60);
 
         if (hoursSinceChange < 4) {
-          //reset after 4 hours
           const temp = parseInt(savedTemp);
           if (temp >= 16 && temp <= 26) {
             updateTemperatureDisplay(temp);
@@ -319,28 +250,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateTemperatureDisplay(currentPeriod.temp);
     };
 
-    //init display
     updateScheduleDisplay();
     initializeTemperature();
 
-    //handle schedule adjustment buttons
     document.querySelectorAll(".adjust-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const isWarmer = btn.classList.contains("warmer-btn");
         const step = 1;
 
-        //update all temps in schedule
         schedule = schedule.map((period) => ({
           ...period,
-          temp: isWarmer
-            ? Math.min(period.temp + step, 26)
-            : Math.max(period.temp - step, 16),
+          temp: isWarmer ? Math.min(period.temp + step, 26) : Math.max(period.temp - step, 16),
         }));
 
-        //save to local storage
         localStorage.setItem("savedSchedule", JSON.stringify(schedule));
 
-        //update temp display
         updateScheduleDisplay();
         initializeTemperature();
 
@@ -350,7 +274,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    //temp control buttons
     document.querySelectorAll(".plus-btn, .minus-btn").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         try {
@@ -360,10 +283,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? Math.min(currentTemp + step, 26)
             : Math.max(currentTemp - step, 16);
 
-          //update temp display
           updateTemperatureDisplay(newTemp);
 
-          //save temp to local storage
           localStorage.setItem("savedTemperature", newTemp.toString());
           localStorage.setItem("lastTempChangeTime", Date.now().toString());
 
@@ -377,12 +298,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    //save to local storage
     const savedSchedule = localStorage.getItem("savedSchedule");
     if (savedSchedule) {
       try {
         const parsedSchedule = JSON.parse(savedSchedule);
-        //error checking for schedule
         if (
           parsedSchedule.every(
             (period) =>
@@ -403,7 +322,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    //update temp periodically to match schedule
     setInterval(() => {
       const lastChangeTime = localStorage.getItem("lastTempChangeTime");
       if (lastChangeTime) {
@@ -411,7 +329,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const now = new Date();
         const hoursSinceChange = (now - changeTime) / (1000 * 60 * 60);
 
-        //reset temp to schedule after 4 hours
         if (hoursSinceChange >= 4) {
           localStorage.removeItem("savedTemperature");
           localStorage.removeItem("lastTempChangeTime");
@@ -421,31 +338,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 60000);
   };
 
-  // init temp control
   const tempModal = document.getElementById("tempModal");
   if (tempModal) {
     tempModal.addEventListener("shown.bs.modal", initializeTemperatureControl);
   }
 
-  // Fall alert Logic
-  //TODO: add logic for determing what room made the fall alert (later)
+  // Fall Alert Logic
   const fallAlertButton = document.getElementById("fallAlertButton");
   const fallAlertMessage = document.getElementById("fallAlertMessage");
 
   fallAlertButton.addEventListener("click", () => {
-    // Show the alert
     fallAlertMessage.style.display = "block";
     fallAlertMessage.classList.add("show");
 
-    // Auto-dismiss after 1.5 seconds
     setTimeout(() => {
       fallAlertMessage.classList.remove("show");
 
       setTimeout(() => {
-        fallAlertMessage.style.display = "none"; //remove the alert
-
-        //reshrink the modal
-        //TODO: add this to the fall alert
+        fallAlertMessage.style.display = "none";
         const modalBody = fallAlertMessage.closest(".modal-body");
         modalBody.style.transition = "height 0.3s ease";
         modalBody.style.height = `${modalBody.scrollHeight}px`;
@@ -453,10 +363,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           modalBody.style.height = "auto";
         }, 10);
       }, 300);
-    }, 5000); //
+    }, 5000);
   });
 
-  // IT Alert Logic
+  // IT Support Logic
   const itHelpButton = document.getElementById("itHelpButton");
   const itHelpmsg = document.getElementById("itHelpmsg");
 
@@ -468,10 +378,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       itHelpmsg.classList.remove("show");
 
       setTimeout(() => {
-        itHelpmsg.style.display = "none"; //remove the alert
-
-        //reshrink the modal
-        //TODO: add this to the fall alert
+        itHelpmsg.style.display = "none";
         const modalBody = itHelpmsg.closest(".modal-body");
         modalBody.style.transition = "height 0.3s ease";
         modalBody.style.height = `${modalBody.scrollHeight}px`;
@@ -479,6 +386,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           modalBody.style.height = "auto";
         }, 10);
       }, 300);
-    }, 5000); //
+    }, 5000);
   });
 });

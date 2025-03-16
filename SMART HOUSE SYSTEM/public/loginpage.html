@@ -5,7 +5,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link rel="stylesheet" href="style.css" />
     <style>
       :root {
         --primary-color: #332215;
@@ -20,70 +19,138 @@
       }
 
       body {
-        font-family: Arial, sans-serif;
-        margin: 50px;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: var(--background-color) !important;
+        color: var(--text-color) !important;
+        font-family: "Segoe UI", Arial, sans-serif !important;
       }
-      form {
-        max-width: 300px;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
+
+      .login-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 2rem;
       }
+
+      h1 {
+        color: var(--text-color) !important;
+        font-size: 2.5rem !important;
+        margin-bottom: 2rem !important;
+        font-weight: 300 !important;
+        text-align: center !important;
+      }
+
+      #loginForm {
+        background-color: var(--primary-color) !important;
+        padding: 2rem !important;
+        border: 2px solid var(--border-contrast) !important;
+        border-radius: 15px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+      }
+
       label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
+        display: block !important;
+        margin-bottom: 0.5rem !important;
+        color: var(--text-color) !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
       }
+
       input {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
+        width: 100% !important;
+        padding: 12px !important;
+        margin-bottom: 1.5rem !important;
+        border: 2px solid var(--border-contrast) !important;
+        border-radius: 8px !important;
+        background-color: var(--interactive-highlight) !important;
+        color: var(--text-color) !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+        box-sizing: border-box !important;
       }
+
+      input:focus {
+        outline: none !important;
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 2px rgba(124, 95, 69, 0.2) !important;
+      }
+
       button {
-        width: 100%;
-        padding: 10px;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
+        width: 100% !important;
+        padding: 12px !important;
+        background-color: var(--surface-color) !important;
+        color: var(--text-color) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
       }
+
       button:hover {
-        background-color: #218838;
+        background-color: var(--positive-feedback) !important;
+        transform: translateY(-1px) !important;
       }
+
+      button:active {
+        transform: translateY(1px) !important;
+      }
+
       #message {
-        margin-top: 20px;
-        text-align: center;
-        font-weight: bold;
+        margin-top: 1.5rem !important;
+        text-align: center !important;
+        font-weight: 500 !important;
+        padding: 10px !important;
+        border-radius: 8px !important;
+        width: 100% !important;
       }
+
       #debugInfo {
-        margin-top: 20px;
-        padding: 10px;
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-family: monospace;
+        margin-top: 1.5rem !important;
+        padding: 1rem !important;
+        background-color: var(--primary-color) !important;
+        border: 1px solid var(--border-contrast) !important;
+        border-radius: 8px !important;
+        font-family: monospace !important;
         display: none;
+        color: var(--text-color) !important;
+        width: 100% !important;
+      }
+
+      @media (max-width: 480px) {
+        .login-container {
+          padding: 1rem;
+        }
+
+        h1 {
+          font-size: 2rem !important;
+        }
       }
     </style>
   </head>
   <body>
-    <h1 style="text-align: center">Login</h1>
-    <form id="loginForm">
-      <label for="name">Username:</label>
-      <input type="text" id="name" name="name" required />
+    <div class="login-container">
+      <h1>Login</h1>
+      <form id="loginForm">
+        <label for="name">Username:</label>
+        <input type="text" id="name" name="name" required />
 
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
 
-      <button type="submit">Login</button>
-    </form>
+        <button type="submit">Login</button>
+      </form>
 
-    <div id="message"></div>
-    <div id="debugInfo"></div>
+      <div id="message"></div>
+      <div id="debugInfo"></div>
+    </div>
 
     <script>
       // Handle form submission

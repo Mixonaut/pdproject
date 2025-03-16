@@ -35,7 +35,13 @@
     </nav>
 
     <!-- LOADING MODAL -->
-    <div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div
+      class="modal fade"
+      id="loadingModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-body text-center">
@@ -53,14 +59,26 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Confirm Logout</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <p>Are you sure you would like to log out?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="confirmLogout">Logout</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" id="confirmLogout">
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -84,18 +102,18 @@
         <i class="fas fa-thermometer-full"></i>
         Temperature
       </button>
-      <button 
-      class="btn big-button"
-      data-bs-toggle="modal"
-      data-bs-target="#energyModal"
+      <button
+        class="btn big-button"
+        data-bs-toggle="modal"
+        data-bs-target="#energyModal"
       >
         <i class="fas fa-bolt"></i>
         Energy Usage
       </button>
-      <button 
-      class="btn big-button"
-      data-bs-toggle="modal"
-      data-bs-target="#settingsModal"
+      <button
+        class="btn big-button"
+        data-bs-toggle="modal"
+        data-bs-target="#settingsModal"
       >
         <i class="fas fa-cog"></i>
         Settings
@@ -113,7 +131,8 @@
         role="alert"
         style="display: none"
       >
-        <i class="fas fa-check-circle me-2"></i> A staff member has been notified
+        <i class="fas fa-check-circle me-2"></i> A staff member has been
+        notified
       </div>
     </div>
 
@@ -125,30 +144,51 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-sliders-h me-2"></i>Room Controls
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <!-- Loading Spinner -->
-            <div id="deviceLoadingSpinner" class="text-center my-3" style="display: none;">
+            <div
+              id="deviceLoadingSpinner"
+              class="text-center my-3"
+              style="display: none"
+            >
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading devices...</span>
               </div>
             </div>
 
             <!-- Error Alert -->
-            <div id="deviceLoadError" class="alert alert-danger" style="display: none;">
+            <div
+              id="deviceLoadError"
+              class="alert alert-danger"
+              style="display: none"
+            >
               Error loading devices. Please try again later.
             </div>
 
             <!-- MAIN MENU -->
             <div class="main-menu text-center">
-              <button class="btn modal-menu-button" data-target="lights-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="lights-control"
+              >
                 <i class="fas fa-lightbulb"></i> Lights
               </button>
-              <button class="btn modal-menu-button" data-target="shutters-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="shutters-control"
+              >
                 <i class="fas fa-blinds"></i> Shutters
               </button>
-              <button class="btn modal-menu-button" data-target="climate-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="climate-control"
+              >
                 <i class="fas fa-fan"></i> Climate
               </button>
               <button class="btn modal-menu-button" data-target="other-control">
@@ -158,7 +198,7 @@
 
             <!-- SUBMENUS -->
             <!-- Lights Control -->
-            <div id="lights-control" class="sub-menu" style="display: none;">
+            <div id="lights-control" class="sub-menu" style="display: none">
               <div class="toggle-container">
                 <!-- Dynamic light devices will be loaded here -->
               </div>
@@ -168,7 +208,7 @@
             </div>
 
             <!-- Shutters Control -->
-            <div id="shutters-control" class="sub-menu" style="display: none;">
+            <div id="shutters-control" class="sub-menu" style="display: none">
               <div class="toggle-container">
                 <!-- Dynamic shutter devices will be loaded here -->
               </div>
@@ -178,7 +218,7 @@
             </div>
 
             <!-- Climate Control -->
-            <div id="climate-control" class="sub-menu" style="display: none;">
+            <div id="climate-control" class="sub-menu" style="display: none">
               <div class="toggle-container">
                 <!-- Dynamic climate devices will be loaded here -->
               </div>
@@ -188,7 +228,7 @@
             </div>
 
             <!-- Other Devices Control -->
-            <div id="other-control" class="sub-menu" style="display: none;">
+            <div id="other-control" class="sub-menu" style="display: none">
               <div class="toggle-container">
                 <!-- Dynamic other devices will be loaded here -->
               </div>
@@ -209,7 +249,11 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-thermometer-full me-2"></i>Room Temperature
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="temp-control-wrapper">
@@ -231,11 +275,17 @@
 
                   <!-- Temperature buttons -->
                   <div class="temp-buttons">
-                    <button class="btn temp-btn plus-btn" aria-label="Make Warmer">
+                    <button
+                      class="btn temp-btn plus-btn"
+                      aria-label="Make Warmer"
+                    >
                       <i class="fas fa-plus"></i>
                       Warmer
                     </button>
-                    <button class="btn temp-btn minus-btn" aria-label="Make Cooler">
+                    <button
+                      class="btn temp-btn minus-btn"
+                      aria-label="Make Cooler"
+                    >
                       <i class="fas fa-minus"></i>
                       Cooler
                     </button>
@@ -286,180 +336,217 @@
           </div>
           <div class="modal-body">
             <div class="temp-control-wrapper">
-              <div class="temp-control-left">
-             
-              </div>
+              <div class="temp-control-left"></div>
 
               <div class="temp-list-right">
                 <h3>This months's rankings:</h3>
                 <table class="table">
-                <thead class="thead">
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">First</th>
-                    <th scope="col " class="text-center">Energy used (kWh)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td class="text-center align-middle">150</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">2</th>
-                    <td>Jacob</td>
-                    <td class="text-center align-middle">167</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">3</th>
-                    <td>Larry</td>
-                    <td class="text-center align-middle">170</td>
-                  </tr>
+                  <thead class="thead">
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">First</th>
+                      <th scope="col " class="text-center">
+                        Energy used (kWh)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">1</th>
+                      <td>Mark</td>
+                      <td class="text-center align-middle">150</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2</th>
+                      <td>Jacob</td>
+                      <td class="text-center align-middle">167</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">3</th>
+                      <td>Larry</td>
+                      <td class="text-center align-middle">170</td>
+                    </tr>
 
-                  <tr>
-                    <th scope="row">4</th>
-                    <td>Eve</td>
-                    <td class="text-center align-middle">171</td>
-                  </tr>
+                    <tr>
+                      <th scope="row">4</th>
+                      <td>Eve</td>
+                      <td class="text-center align-middle">171</td>
+                    </tr>
 
-                  <tr>
-                    <th scope="row">5</th>
-                    <td>Cecil</td>
-                    <td class="text-center align-middle">175</td>
-                  </tr>
+                    <tr>
+                      <th scope="row">5</th>
+                      <td>Cecil</td>
+                      <td class="text-center align-middle">175</td>
+                    </tr>
 
-                  <tr>
-                    <th scope="row">6</th>
-                    <td>Debbie</td>
-                    <td class="text-center align-middle">188</td>
-                  </tr>
+                    <tr>
+                      <th scope="row">6</th>
+                      <td>Debbie</td>
+                      <td class="text-center align-middle">188</td>
+                    </tr>
 
-                  <tr>
-                    <th scope="row">7</th>
-                    <td>Nolan</td>
-                    <td class="text-center align-middle">189</td>
-                  </tr>
-                </tbody>
-              </table>
-                
+                    <tr>
+                      <th scope="row">7</th>
+                      <td>Nolan</td>
+                      <td class="text-center align-middle">189</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>  
-<!-- SETTINGS MODAL -->
-<div class="modal fade" id="settingsModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fs-4">
-          <i class="fas fa-cog me-2"></i>Settings
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <!-- IT Support Button -->
-        <div class="itSupContainer">
-          <button type="button" class="btn modal-menu-button" id="itHelpButton">
-            Call IT Support <i class="fa-solid fa-laptop"></i>
-          </button>
-          <div class="alert alert-success fade mt-3" id="itHelpmsg" role="alert" style="display: none">
-            <i class="fas fa-check-circle me-2"></i> IT professional is on their way
+    </div>
+    <!-- SETTINGS MODAL -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fs-4">
+              <i class="fas fa-cog me-2"></i>Settings
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- IT Support Button -->
+            <div class="itSupContainer">
+              <button
+                type="button"
+                class="btn modal-menu-button"
+                id="itHelpButton"
+              >
+                Call IT Support <i class="fa-solid fa-laptop"></i>
+              </button>
+              <div
+                class="alert alert-success fade mt-3"
+                id="itHelpmsg"
+                role="alert"
+                style="display: none"
+              >
+                <i class="fas fa-check-circle me-2"></i> IT professional is on
+                their way
+              </div>
+            </div>
+
+            <!-- Account Settings Section -->
+            <div class="settings-section">
+              <h4 style="color: white">
+                <i
+                  class="fa-solid fa-user me-2"
+                  style="color: white; padding-top: 20px"
+                ></i
+                >Account Settings
+              </h4>
+              <div class="toggle-container">
+                <div class="toggle-item">
+                  <div class="toggle-content">
+                    <span>Anonymous Mode</span>
+                    <p class="toggle-explanation">
+                      Hides your name on the energy rankings
+                    </p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="showRankingToggle" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accessibility Section -->
+            <div class="settings-section">
+              <h4 style="color: white">
+                <i class="fa-solid fa-eye me-2" style="color: white"></i
+                >Accessibility
+              </h4>
+              <div class="toggle-container">
+                <div class="toggle-item">
+                  <span>High Contrast Mode</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="highContrastToggle" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="toggle-item">
+                  <span>Font Size</span>
+                  <select class="form-select">
+                    <option value="small">Small</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-<!-- Account Settings Section -->
-<div class="settings-section">
-  <h4 style="color:white">
-    <i class="fa-solid fa-user me-2" style="color:white; padding-top:20px"></i>Account Settings
-  </h4>
-  <div class="toggle-container">
-    <div class="toggle-item">
-      <div class="toggle-content">
-        <span>Anonymous Mode</span>
-        <p class="toggle-explanation">Hides your name on the energy rankings</p>
-      </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="showRankingToggle">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-  </div>
-</div>
-
-        <!-- Accessibility Section -->
-        <div class="settings-section">
-          <h4 style="color:white"><i class="fa-solid fa-eye me-2" style="color:white"></i>Accessibility</h4>
-          <div class="toggle-container">
-            <div class="toggle-item">
-              <span>High Contrast Mode</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="highContrastToggle">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <span>Font Size</span>
-              <select class="form-select">
-                <option value="small">Small</option>
-                <option value="medium" selected>Medium</option>
-                <option value="large">Large</option>
-              </select>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
-  </div>
-</div>
-    
-    
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="menu.js"></script>
     <script>
       // Add logout functionality
-      document.getElementById('btnLogout').addEventListener('click', function() {
-        // Show confirmation modal
-        const logoutConfirmModal = new bootstrap.Modal(document.getElementById('logoutConfirmModal'));
-        logoutConfirmModal.show();
-      });
+      document
+        .getElementById("btnLogout")
+        .addEventListener("click", function () {
+          // Show confirmation modal
+          const logoutConfirmModal = new bootstrap.Modal(
+            document.getElementById("logoutConfirmModal")
+          );
+          logoutConfirmModal.show();
+        });
 
       // Handle confirmed logout
-      document.getElementById('confirmLogout').addEventListener('click', async function() {
-        try {
-          // Hide confirmation modal
-          const logoutConfirmModal = bootstrap.Modal.getInstance(document.getElementById('logoutConfirmModal'));
-          logoutConfirmModal.hide();
+      document
+        .getElementById("confirmLogout")
+        .addEventListener("click", async function () {
+          try {
+            // Hide confirmation modal
+            const logoutConfirmModal = bootstrap.Modal.getInstance(
+              document.getElementById("logoutConfirmModal")
+            );
+            logoutConfirmModal.hide();
 
-          // Show loading modal
-          const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-          loadingModal.show();
+            // Show loading modal
+            const loadingModal = new bootstrap.Modal(
+              document.getElementById("loadingModal")
+            );
+            loadingModal.show();
 
-          // Clear all local storage items
-          localStorage.clear();
+            // Clear all local storage items
+            localStorage.clear();
 
-          // Clear any session storage items
-          sessionStorage.clear();
+            // Clear any session storage items
+            sessionStorage.clear();
 
-          // Clear any cookies
-          document.cookie.split(";").forEach(function(c) {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-          });
+            // Clear any cookies
+            document.cookie.split(";").forEach(function (c) {
+              document.cookie = c
+                .replace(/^ +/, "")
+                .replace(
+                  /=.*/,
+                  "=;expires=" + new Date().toUTCString() + ";path=/"
+                );
+            });
 
-          // Redirect to login page
-          window.location.href = "/loginpage.html";
-        } catch (error) {
-          console.error("Error during logout:", error);
-          alert("Error logging out. Please try again.");
-          const loadingModal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
-          if (loadingModal) {
-            loadingModal.hide();
+            // Redirect to login page
+            window.location.href = "/login";
+          } catch (error) {
+            console.error("Error during logout:", error);
+            alert("Error logging out. Please try again.");
+            const loadingModal = bootstrap.Modal.getInstance(
+              document.getElementById("loadingModal")
+            );
+            if (loadingModal) {
+              loadingModal.hide();
+            }
           }
-        }
-      });
+        });
     </script>
   </body>
 </html>

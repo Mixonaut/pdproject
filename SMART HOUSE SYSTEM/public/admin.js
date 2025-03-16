@@ -2268,7 +2268,7 @@ async function handleLogout() {
           });
 
           // Redirect to login page
-          window.location.href = "/loginpage.html";
+          window.location.href = "/login";
         } catch (error) {
           console.error("Error during logout:", error);
           alert("Error logging out. Please try again.");

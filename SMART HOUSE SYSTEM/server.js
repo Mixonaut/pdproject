@@ -436,7 +436,12 @@ app.post(
 
 // Serve HTML pages
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "loginpage.html"));
+  res.sendFile(path.join(__dirname, "public", "loginpage.html"));
+});
+
+// Login page route
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "loginpage.html"));
 });
 
 app.get("/app", (req, res) => {

@@ -226,7 +226,35 @@ function showSection(section) {
     showRoomAssignments(); // Show room assignments when viewing rooms section
   } else if (section === "users") {
     sectionUsers.classList.remove("d-none");
-    fetchUsers(); // Fetch users when viewing this section
+
+    // Reset the user section state
+    allUsers = [];
+    filteredUsers = [];
+    currentPage = 1;
+
+    // Initialize the table container with loading state
+    const tableContainer = sectionUsers.querySelector(".table-responsive");
+    if (tableContainer) {
+      tableContainer.innerHTML = `
+        <div class="text-center my-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading users...</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Reset filters to default values
+    const filterUsername = document.getElementById("filterUsername");
+    const filterRole = document.getElementById("filterRole");
+    const filterRoom = document.getElementById("filterRoom");
+
+    if (filterUsername) filterUsername.value = "";
+    if (filterRole) filterRole.value = "";
+    if (filterRoom) filterRoom.value = "";
+
+    // Fetch users after showing the section
+    fetchUsers();
   }
 
   // Close the offcanvas sidebar
@@ -1704,18 +1732,8 @@ let filteredUsers = [];
 // Fetch users for the user management section
 async function fetchUsers() {
   const userSection = document.getElementById("sectionUsers");
-
-  // show loading spinner while we fetch
-  const loadingIndicator = document.createElement("div");
-  loadingIndicator.className = "text-center my-3";
-  loadingIndicator.innerHTML =
-    '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading users...</span></div>';
-
   const tableContainer = userSection.querySelector(".table-responsive");
   if (!tableContainer) return;
-
-  tableContainer.innerHTML = "";
-  tableContainer.appendChild(loadingIndicator);
 
   try {
     // get the base user list
@@ -1742,10 +1760,12 @@ async function fetchUsers() {
       }
     }
 
-    // apply any active filters and show the list
+    // Clear the loading state and apply filters
+    tableContainer.innerHTML = ""; // Clear the loading spinner
     applyFilters();
   } catch (error) {
     console.error("Error fetching users:", error);
+    // Clear the loading state and show error
     tableContainer.innerHTML =
       '<div class="alert alert-danger">Error loading users. Please try again later.</div>';
   }

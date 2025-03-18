@@ -181,22 +181,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Set up export buttons
-  document.getElementById("exportChart").addEventListener("click", exportChart);
-  document.getElementById("exportCSV").addEventListener("click", exportCSV);
+  const exportChartBtn = document.getElementById("exportChart");
+  const exportCSVBtn = document.getElementById("exportCSV");
+  const viewAlertsBtn = document.getElementById("viewAlerts");
+  const btnAddUser = document.getElementById("btnAddUser");
 
-  // Set up alert viewing
-  document.getElementById("viewAlerts").addEventListener("click", viewAlerts);
-
-  // Add user management button listeners
-  document.getElementById("btnAddUser").addEventListener("click", addUser);
-  document.getElementById("btnEditUser").addEventListener("click", function () {
-    alert("Please select a user from the list to edit.");
-  });
-  document
-    .getElementById("btnRemoveUser")
-    .addEventListener("click", function () {
-      alert("Please select a user from the list to delete.");
-    });
+  if (exportChartBtn) {
+    exportChartBtn.addEventListener("click", exportChart);
+  }
+  if (exportCSVBtn) {
+    exportCSVBtn.addEventListener("click", exportCSV);
+  }
+  if (viewAlertsBtn) {
+    viewAlertsBtn.addEventListener("click", viewAlerts);
+  }
+  if (btnAddUser) {
+    btnAddUser.addEventListener("click", addUser);
+  }
 });
 
 /*******************************************
@@ -1955,17 +1956,17 @@ function setActivePeriod(period) {
 }
 
 function toggleFilter(mode) {
-  additionalFilters.style.display = "block";
+  additionalFilters.style.display = "flex";
   filterDay.style.display = "none";
   filterMonth.style.display = "none";
   filterYear.style.display = "none";
 
   if (mode === "day") {
-    filterDay.style.display = "block";
+    filterDay.style.display = "flex";
   } else if (mode === "month") {
-    filterMonth.style.display = "block";
+    filterMonth.style.display = "flex";
   } else if (mode === "year") {
-    filterYear.style.display = "block";
+    filterYear.style.display = "flex";
   }
 }
 
@@ -2031,9 +2032,22 @@ function exportCSV() {
  * ENERGY SUMMARY
  *******************************************/
 
+// Define colors for different device types
+const deviceTypeColors = {
+  light: "rgba(255, 206, 86, 1)", // Yellow
+  blind: "rgba(75, 192, 192, 1)", // Teal
+  thermostat: "rgba(255, 99, 132, 1)", // Red
+  other: "rgba(153, 102, 255, 1)", // Purple
+  default: "rgba(54, 162, 235, 1)", // Blue
+};
+
+// Global chart instance for device type chart
+let deviceTypeChart = null;
+
 // Update the energy summary section
 async function updateEnergySummary() {
   const energySummary = document.getElementById("energySummary");
+  if (!energySummary) return;
 
   // Add loading indicator
   energySummary.innerHTML = `
@@ -2073,7 +2087,9 @@ async function updateEnergySummary() {
       <div class="card">
         <div class="card-body">
           <h5>Energy by Device Type</h5>
-          <div id="deviceTypeChart" style="height: 200px;"></div>
+          <div style="height: 300px; position: relative;">
+            <canvas id="deviceTypeChart"></canvas>
+          </div>
         </div>
       </div>
     `;
@@ -2129,15 +2145,18 @@ async function updateEnergySummary() {
     }
 
     // Update the UI with the data
-    document.getElementById(
-      "totalEnergyToday"
-    ).textContent = `${totalEnergy.toFixed(2)} kWh`;
+    const totalEnergyElement = document.getElementById("totalEnergyToday");
+    if (totalEnergyElement) {
+      totalEnergyElement.textContent = `${totalEnergy.toFixed(2)} kWh`;
+    }
 
     const comparisonElement = document.getElementById("comparisonYesterday");
-    comparisonElement.textContent = `${Math.abs(percentageChange).toFixed(
-      1
-    )}% ${percentageChange >= 0 ? "higher" : "lower"}`;
-    comparisonElement.style.color = percentageChange >= 0 ? "red" : "green";
+    if (comparisonElement) {
+      comparisonElement.textContent = `${Math.abs(percentageChange).toFixed(
+        1
+      )}% ${percentageChange >= 0 ? "higher" : "lower"}`;
+      comparisonElement.style.color = percentageChange >= 0 ? "red" : "green";
+    }
 
     // Create device type chart
     const deviceTypes = Object.keys(deviceTypeData);
@@ -2145,27 +2164,80 @@ async function updateEnergySummary() {
 
     if (deviceTypes.length > 0) {
       const deviceCtx = document.getElementById("deviceTypeChart");
-      new Chart(deviceCtx, {
-        type: "doughnut",
-        data: {
-          labels: deviceTypes,
-          datasets: [
-            {
-              data: deviceUsage,
-              backgroundColor: deviceTypes.map(
-                (_, i) => colors[i % colors.length]
-              ),
+      if (!deviceCtx) {
+        console.error("Could not find deviceTypeChart canvas element");
+        return;
+      }
+
+      // Destroy existing chart if it exists
+      if (deviceTypeChart) {
+        deviceTypeChart.destroy();
+      }
+
+      try {
+        // Create new chart with improved configuration
+        deviceTypeChart = new Chart(deviceCtx, {
+          type: "doughnut",
+          data: {
+            labels: deviceTypes.map(
+              (type) => type.charAt(0).toUpperCase() + type.slice(1)
+            ),
+            datasets: [
+              {
+                data: deviceUsage,
+                backgroundColor: deviceTypes.map(
+                  (type) => deviceTypeColors[type] || deviceTypeColors.default
+                ),
+                borderColor: deviceTypes.map(
+                  (type) => deviceTypeColors[type] || deviceTypeColors.default
+                ),
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: "right",
+                labels: {
+                  padding: 20,
+                  font: {
+                    size: 12,
+                  },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const value = context.raw;
+                    const total = context.dataset.data.reduce(
+                      (a, b) => a + b,
+                      0
+                    );
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${context.label}: ${value.toFixed(
+                      2
+                    )} kWh (${percentage}%)`;
+                  },
+                },
+              },
             },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-        },
-      });
+            cutout: "60%",
+          },
+        });
+      } catch (error) {
+        console.error("Error creating chart:", error);
+        document.getElementById("deviceTypeChart").innerHTML =
+          '<div class="alert alert-danger">Error creating chart. Please try again.</div>';
+      }
     } else {
-      document.getElementById("deviceTypeChart").innerHTML =
-        '<div class="alert alert-info">No device type data available.</div>';
+      const chartContainer = document.getElementById("deviceTypeChart");
+      if (chartContainer) {
+        chartContainer.innerHTML =
+          '<div class="alert alert-info">No device type data available.</div>';
+      }
     }
   } catch (error) {
     console.error("Error updating energy summary:", error);

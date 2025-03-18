@@ -1,26 +1,26 @@
 // db.js - Database connection handler
-const mysql = require('mysql2/promise');
+const mysql = require("mysql2/promise");
 
 // Create a connection pool for better performance
 const pool = mysql.createPool({
-  host: '132.145.18.222',
-  user: 'nm2064',
-  password: 'wnd2VKSANY7',
-  database: 'nm2064',
+  host: "132.145.18.222",
+  user: "nm2064",
+  password: "wnd2VKSANY7",
+  database: "nm2064",
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 100,
+  queueLimit: 0,
 });
 
 // Test database connection
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('Database connection successful!');
+    console.log("Database connection successful!");
     connection.release();
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error("Database connection failed:", error);
     return false;
   }
 }
@@ -31,7 +31,7 @@ async function query(sql, params) {
     const [results] = await pool.execute(sql, params);
     return results;
   } catch (error) {
-    console.error('Error executing query:', error);
+    console.error("Error executing query:", error);
     throw error;
   }
 }
@@ -39,5 +39,5 @@ async function query(sql, params) {
 module.exports = {
   pool,
   query,
-  testConnection
+  testConnection,
 };

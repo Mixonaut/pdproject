@@ -439,7 +439,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "loginpage.html"));
 });
 
-// Login page route
+//login page route
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "loginpage.html"));
 });

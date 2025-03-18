@@ -103,50 +103,60 @@
       <div id="sectionAnalytics" class="d-none">
         <h2 class="mb-4" style="text-align: center">Care Home Analytics</h2>
         <div id="summaryContainer" class="container-fluid">
-          <div>
-            <h2 class="mb-3">Historical Statistics</h2>
+          <div id="energySummary" class="container-fluid m-2">
+            This will contain a summary of energy expenditure
+          </div>
+          <h2>Energy Usage By Room</h2>
+          <div style="display: flex">
             <!-- Time period nav pills -->
-            <ul class="nav nav-pills mb-3" id="timePeriodNav" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button
-                  class="time-period-button nav-link active"
-                  id="day-tab"
-                  data-value="day"
-                  type="button"
-                  role="tab"
-                >
-                  Day
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="time-period-button nav-link"
-                  id="month-tab"
-                  data-value="month"
-                  type="button"
-                  role="tab"
-                >
-                  Month
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="time-period-button nav-link"
-                  id="year-tab"
-                  data-value="year"
-                  type="button"
-                  role="tab"
-                >
-                  Year
-                </button>
-              </li>
-            </ul>
+            <div style="gap: 20px">
+              <ul class="nav nav-pills mb-3" id="timePeriodNav" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="time-period-button nav-link active"
+                    id="day-tab"
+                    data-value="day"
+                    type="button"
+                    role="tab"
+                  >
+                    Day
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="time-period-button nav-link"
+                    id="month-tab"
+                    data-value="month"
+                    type="button"
+                    role="tab"
+                  >
+                    Month
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="time-period-button nav-link"
+                    id="year-tab"
+                    data-value="year"
+                    type="button"
+                    role="tab"
+                  >
+                    Year
+                  </button>
+                </li>
+              </ul>
+            </div>
 
             <!-- Additional filters -->
-            <div id="additionalFilters" class="mb-3">
+            <div id="additionalFilters" class="mb-1">
               <!-- Filter for selecting day -->
-              <div id="filterDay">
-                <label for="dayInput" class="form-label">Select Date:</label>
+              <div id="filterDay" style="display: flex; align-items: center">
+                <label
+                  for="dayInput"
+                  class="form-label"
+                  style="white-space: nowrap; margin-right: 10px"
+                  >Select Date:</label
+                >
                 <input
                   type="date"
                   class="form-control"
@@ -155,8 +165,11 @@
                 />
               </div>
               <!-- Filter for selecting month -->
-              <div id="filterMonth" style="display: none">
-                <label for="monthSelect" class="form-label"
+              <div id="filterMonth" style="display: flex; align-items: center">
+                <label
+                  style="white-space: nowrap; margin-right: 10px"
+                  for="monthSelect"
+                  class="form-label"
                   >Select Month:</label
                 >
                 <select
@@ -179,8 +192,13 @@
                 </select>
               </div>
               <!-- Filter for selecting year -->
-              <div id="filterYear" style="display: none">
-                <label for="yearSelect" class="form-label">Select Year:</label>
+              <div id="filterYear" style="display: flex; align-items: center">
+                <label
+                  style="white-space: nowrap; margin-right: 10px"
+                  for="yearSelect"
+                  class="form-label"
+                  >Select Year:</label
+                >
                 <select
                   class="form-select"
                   id="yearSelect"
@@ -192,77 +210,70 @@
               </div>
             </div>
           </div>
-          <div id="energySummary" class="container-fluid m-2">
-            This will contain a summary of energy expenditure
-          </div>
-        </div>
+          <div class="overview-container">
+            <!-- View toggle dropdown -->
 
-        <div class="overview-container">
-          <!-- View toggle dropdown -->
-          <select
-            id="viewSelect"
-            class="form-select d-inline-block mb-1"
-            style="width: 150px"
-          >
-            <option value="room" selected>By Room</option>
-          </select>
-          <!-- Example Rooms Select (multiple) -->
-          <div
-            class="d-flex flex-wrap align-items-center mb-1"
-            style="gap: 1rem"
-          >
-            <div id="roomsSelect"></div>
-          </div>
-
-          <div id="chartLoading" class="d-none text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading data...</span>
+            <!-- Example Rooms Select (multiple) -->
+            <div
+              class="d-flex flex-wrap align-items-center mb-1"
+              style="gap: 1rem"
+            >
+              <div id="roomsSelect"></div>
             </div>
-          </div>
-          <canvas
-            id="energyChart"
-            class="chart-container mb-3"
-            style="height: 300px"
-          ></canvas>
 
-          <!-- Export buttons -->
-          <button class="btn btn-primary mb-3" id="exportChart">
-            Export Chart
-          </button>
-          <button class="btn btn-primary mb-3" id="exportCSV">
-            Export CSV
-          </button>
-
-          <!-- Alerts button and modal -->
-          <button class="btn btn-info mb-3" id="viewAlerts">View Alerts</button>
-          <div class="modal fade" id="alertsModal" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Recent Alerts</h5>
-                  <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                  ></button>
-                </div>
-                <div class="modal-body" id="alertsList"></div>
+            <div id="chartLoading" class="d-none text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading data...</span>
               </div>
             </div>
-          </div>
+            <canvas
+              id="energyChart"
+              class="chart-container mb-3"
+              style="height: 300px"
+            ></canvas>
 
-          <div class="stats-container">
-            <p>
-              <strong>Total Energy Usage:</strong>
-              <span id="energyUsage">0</span>
-            </p>
-            <p>
-              <strong>Active Devices:</strong>
-              <span id="deviceStatus">0</span>
-            </p>
-            <p>
-              <strong>Recent Alerts:</strong> <span id="alerts">No alerts</span>
-            </p>
+            <!-- Export buttons -->
+            <button class="btn btn-primary mb-3" id="exportChart">
+              Export Chart
+            </button>
+            <button class="btn btn-primary mb-3" id="exportCSV">
+              Export CSV
+            </button>
+
+            <!-- Alerts button and modal -->
+            <button class="btn btn-info mb-3" id="viewAlerts">
+              View Alerts
+            </button>
+            <div class="modal fade" id="alertsModal" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Recent Alerts</h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                    ></button>
+                  </div>
+                  <div class="modal-body" id="alertsList"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-container">
+              <p>
+                <strong>Total Energy Usage:</strong>
+                <span id="energyUsage">0</span>
+              </p>
+              <p>
+                <strong>Active Devices:</strong>
+                <span id="deviceStatus">0</span>
+              </p>
+              <p>
+                <strong>Recent Alerts:</strong>
+                <span id="alerts">No alerts</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>

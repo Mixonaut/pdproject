@@ -436,7 +436,8 @@ input:checked + .toggle-slider:before {
 
 #summaryContainer {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: 20px;
 }
 
 #energySummary {
@@ -641,13 +642,11 @@ input:checked + .toggle-slider:before {
   font-weight: bold;
 }
 
-
 body.high-contrast {
   --background-color: #000;
   --text-color: #fff;
   --primary-color: #ffeb3b;
 }
-
 
 body.font-small {
   font-size: 14px;
@@ -671,9 +670,9 @@ body.font-large {
 }
 .toggle-item {
   display: flex;
-  justify-content: space-between; 
-  align-items: center; 
-  gap: 16px; 
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 
 .toggle-content {
@@ -683,7 +682,6 @@ body.font-large {
 .toggle-explanation {
   font-size: medium;
   font-weight: lighter;
-  color: #ccc; 
-  margin: 4px 0 0 0; 
+  color: #ccc;
+  margin: 4px 0 0 0;
 }
-

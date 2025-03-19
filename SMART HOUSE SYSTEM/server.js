@@ -489,6 +489,64 @@ app.get("/api/rooms/with-users", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+// Leaderboard route to get energy usage rankings
+app.get("/api/energy/leaderboard", async (req, res) => {
+  try {
+    // Get the period from query (default to day)
+    const period = req.query.period || 'day';
+    
+    // SQL to get leaderboard with user details and total energy usage
+    const sql = `
+      SELECT 
+        u.user_id,
+        u.username,
+        ud.first_name,
+        ud.last_name,
+        r.room_number,
+        ROUND(SUM(eu.energy_consumed), 2) as total_energy,
+        DENSE_RANK() OVER (ORDER BY SUM(eu.energy_consumed) DESC) as energy_rank
+      FROM 
+        energy_usage eu
+      JOIN 
+        devices d ON eu.device_id = d.device_id
+      JOIN 
+        rooms r ON eu.room_id = r.room_id
+      JOIN 
+        user_details ud ON r.room_number = ud.room_number
+      JOIN 
+        users u ON ud.user_id = u.user_id
+      WHERE 
+        ${period === 'day' ? 'DATE(eu.timestamp) = CURDATE()' : 
+         period === 'month' ? 'MONTH(eu.timestamp) = MONTH(CURDATE()) AND YEAR(eu.timestamp) = YEAR(CURDATE())' : 
+         'YEAR(eu.timestamp) = YEAR(CURDATE())'}
+      GROUP BY 
+        u.user_id, u.username, ud.first_name, ud.last_name, r.room_number
+      ORDER BY 
+        total_energy DESC
+      LIMIT 20
+    `;
+
+    const leaderboard = await db.query(sql);
+
+    // Transform results to anonymize if needed
+    const anonymizedLeaderboard = leaderboard.map(entry => ({
+      rank: entry.energy_rank,
+      username: entry.username,
+      firstName: entry.first_name,
+      roomNumber: entry.room_number,
+      totalEnergy: parseFloat(entry.total_energy),
+      anonymous: false  // Can be used to hide identifying info if needed
+    }));
+
+    res.json(anonymizedLeaderboard);
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    res.status(500).json({ 
+      error: "Failed to retrieve leaderboard", 
+      details: error.message 
+    });
+  }
+});
 
 // call to reset password
 app.post("/users/:userId/reset-password", async (req, res) => {

@@ -261,6 +261,14 @@ const smartHomeApi = {
     getCurrentUser: async function () {
       try {
         const response = await fetch("/api/users/current");
+        
+        // Handle unauthorized properly
+        if (response.status === 401) {
+          console.log("User not authenticated, redirecting to login");
+          window.location.href = "/login";
+          return null;
+        }
+        
         if (!response.ok) throw new Error("Failed to fetch current user");
         return await response.json();
       } catch (error) {
@@ -462,6 +470,27 @@ const smartHomeApi = {
           error
         );
         throw error;
+      }
+    },
+    leaderboard: {
+      /**
+       * Get energy usage leaderboard
+       * @param {string} period - Time period ('day', 'month', 'year')
+       * @returns {Promise<Array>} Leaderboard data
+       */
+      get: async function (period = 'day') {
+        try {
+          const response = await fetch(`/api/energy/leaderboard?period=${period}`);
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch leaderboard");
+          }
+          
+          return await response.json();
+        } catch (error) {
+          console.error("Error fetching leaderboard:", error);
+          throw error;
+        }
       }
     },
   },

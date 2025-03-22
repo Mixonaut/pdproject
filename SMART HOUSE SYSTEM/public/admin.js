@@ -185,6 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const exportCSVBtn = document.getElementById("exportCSV");
   const viewAlertsBtn = document.getElementById("viewAlerts");
   const btnAddUser = document.getElementById("btnAddUser");
+  const btnRefreshUsers = document.getElementById("btnRefreshUsers");
 
   if (exportChartBtn) {
     exportChartBtn.addEventListener("click", exportChart);
@@ -198,11 +199,184 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnAddUser) {
     btnAddUser.addEventListener("click", addUser);
   }
+  if (btnRefreshUsers) {
+    btnRefreshUsers.addEventListener("click", async () => {
+      if (btnRefreshUsers.disabled) return;
+
+      const originalContent = btnRefreshUsers.innerHTML;
+      btnRefreshUsers.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+      btnRefreshUsers.disabled = true;
+
+      try {
+        await fetchUsersWithCache();
+      } catch (error) {
+        console.error("Error during refresh:", error);
+
+        const tableContainer = document.querySelector(".table-responsive");
+        if (tableContainer) {
+          tableContainer.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-circle"></i> Error refreshing users: ${error.message}
+              <button class="btn btn-sm btn-outline-danger ms-2" onclick="retryRefresh()">
+                <i class="fas fa-redo"></i> Retry
+              </button>
+            </div>
+          `;
+        }
+      } finally {
+        btnRefreshUsers.innerHTML = originalContent;
+        btnRefreshUsers.disabled = false;
+      }
+    });
+  }
+
+  // Add retry function
+  function retryRefresh() {
+    const btnRefreshUsers = document.getElementById("btnRefreshUsers");
+    if (btnRefreshUsers) {
+      btnRefreshUsers.click();
+    }
+  }
 });
 
 /*******************************************
  * SECTION TOGGLING
  *******************************************/
+
+// Add cache management variables at the top level
+let userCache = {
+  data: null,
+  version: null,
+  lastFetch: null,
+  isFetching: false,
+};
+
+// Add cache management functions
+async function getCachedUsers() {
+  // If we're already fetching, return the cached data if available
+  if (userCache.isFetching) {
+    if (userCache.data) {
+      return userCache.data;
+    }
+    // Wait for the ongoing fetch to complete
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return userCache.data;
+  }
+
+  // If we have cached data and it's less than 5 minutes old, use it
+  if (
+    userCache.data &&
+    userCache.lastFetch &&
+    Date.now() - userCache.lastFetch < 5 * 60 * 1000
+  ) {
+    return userCache.data;
+  }
+
+  // Otherwise, fetch fresh data
+  return await fetchUsersWithCache();
+}
+
+async function fetchUsersWithCache() {
+  if (userCache.isFetching) {
+    return userCache.data;
+  }
+
+  userCache.isFetching = true;
+  const userSection = document.getElementById("sectionUsers");
+  if (!userSection) {
+    userCache.isFetching = false;
+    throw new Error("User section not found");
+  }
+
+  // Ensure table container exists
+  let tableContainer = userSection.querySelector(".table-responsive");
+  if (!tableContainer) {
+    tableContainer = document.createElement("div");
+    tableContainer.className = "table-responsive";
+    userSection.querySelector(".card-body").appendChild(tableContainer);
+  }
+
+  try {
+    // Show loading state
+    tableContainer.innerHTML = `
+      <div class="text-center my-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading users...</span>
+        </div>
+      </div>
+    `;
+
+    // Get the base user list with retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    let allUsersData;
+
+    while (retryCount < maxRetries) {
+      try {
+        allUsersData = await smartHomeApi.users.getAll();
+        break;
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          throw new Error(
+            `Failed to fetch users after ${maxRetries} attempts: ${error.message}`
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+
+    // Fetch room assignments in parallel
+    const roomPromises = allUsersData.map(async (user) => {
+      if (user.role_name === "resident") {
+        try {
+          const room = await smartHomeApi.userRooms.getUserRoom(user.user_id);
+          return {
+            userId: user.user_id,
+            room: room ? `Room ${room.room_number}` : "None",
+          };
+        } catch (error) {
+          console.error(`Error fetching room for user ${user.user_id}:`, error);
+          return {
+            userId: user.user_id,
+            room: "Error",
+          };
+        }
+      }
+      return {
+        userId: user.user_id,
+        room: "N/A",
+      };
+    });
+
+    const roomResults = await Promise.all(roomPromises);
+
+    // Update user room assignments
+    roomResults.forEach((result) => {
+      const user = allUsersData.find((u) => u.user_id === result.userId);
+      if (user) {
+        user.assignedRoom = result.room;
+      }
+    });
+
+    // Update cache
+    userCache.data = allUsersData;
+    userCache.lastFetch = Date.now();
+    userCache.version = Date.now().toString();
+
+    // Update the display
+    allUsers = allUsersData;
+    applyFilters();
+
+    return allUsersData;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  } finally {
+    userCache.isFetching = false;
+  }
+}
 
 function showSection(section) {
   const sectionAnalytics = document.getElementById("sectionAnalytics");
@@ -224,7 +398,7 @@ function showSection(section) {
     setActivePeriod(savedPeriod);
   } else if (section === "rooms") {
     sectionRooms.classList.remove("d-none");
-    showRoomAssignments(); // Show room assignments when viewing rooms section
+    showRoomAssignments();
   } else if (section === "users") {
     sectionUsers.classList.remove("d-none");
 
@@ -254,15 +428,37 @@ function showSection(section) {
     if (filterRole) filterRole.value = "";
     if (filterRoom) filterRoom.value = "";
 
-    // Fetch users after showing the section
-    fetchUsers();
+    // Use cached data
+    getCachedUsers().catch((error) => {
+      console.error("Error loading cached users:", error);
+      const tableContainer = sectionUsers.querySelector(".table-responsive");
+      if (tableContainer) {
+        tableContainer.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> Error loading users: ${error.message}
+            <button class="btn btn-sm btn-outline-danger ms-2" onclick="retryRefresh()">
+              <i class="fas fa-redo"></i> Retry
+            </button>
+          </div>
+        `;
+      }
+    });
   }
 
   // Close the offcanvas sidebar
   const offcanvasElement = document.getElementById("sidebarMenu");
-  const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasElement);
-  if (offcanvasInstance) {
-    offcanvasInstance.hide();
+  if (offcanvasElement) {
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
+    if (bsOffcanvas) {
+      bsOffcanvas.hide();
+      const backdrop = document.querySelector(".offcanvas-backdrop");
+      if (backdrop) {
+        backdrop.remove();
+      }
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    }
   }
 }
 
@@ -1293,18 +1489,14 @@ async function getUserRoom(userId) {
 // Enhanced edit user function with room assignment
 async function editUser(userId) {
   try {
-    // Show loading modal
-    const loadingModal = new bootstrap.Modal(
-      document.getElementById("loadingModal")
-    );
-    loadingModal.show();
-
     // Fetch user details
     const users = await smartHomeApi.users.getAll();
-    const user = users.find((u) => u.user_id === parseInt(userId));
+    // Convert userId to number for comparison
+    const user = users.find((u) => u.user_id === Number(userId));
 
     if (!user) {
-      loadingModal.hide();
+      console.error("User not found:", userId);
+      console.log("Available users:", users);
       alert("User not found");
       return;
     }
@@ -1314,9 +1506,6 @@ async function editUser(userId) {
 
     // Fetch user's current room
     const currentRoom = await getUserRoom(userId);
-
-    // Hide loading modal
-    loadingModal.hide();
 
     // Only show room assignment for residents
     const isResident = user.role_name === "resident";
@@ -1733,42 +1922,89 @@ let filteredUsers = [];
 // Fetch users for the user management section
 async function fetchUsers() {
   const userSection = document.getElementById("sectionUsers");
-  const tableContainer = userSection.querySelector(".table-responsive");
-  if (!tableContainer) return;
+  if (!userSection) {
+    throw new Error("User section not found");
+  }
+
+  // Ensure table container exists
+  let tableContainer = userSection.querySelector(".table-responsive");
+  if (!tableContainer) {
+    tableContainer = document.createElement("div");
+    tableContainer.className = "table-responsive";
+    userSection.querySelector(".card-body").appendChild(tableContainer);
+  }
 
   try {
-    // get the base user list
-    allUsers = await smartHomeApi.users.getAll();
+    // Show loading state
+    tableContainer.innerHTML = `
+      <div class="text-center my-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading users...</span>
+        </div>
+      </div>
+    `;
 
-    // for residents, we need to look up their room assignments
-    for (let i = 0; i < allUsers.length; i++) {
-      if (allUsers[i].role_name === "resident") {
-        try {
-          const room = await smartHomeApi.userRooms.getUserRoom(
-            allUsers[i].user_id
+    // get the base user list with retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    let allUsersData;
+
+    while (retryCount < maxRetries) {
+      try {
+        allUsersData = await smartHomeApi.users.getAll();
+        break;
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          throw new Error(
+            `Failed to fetch users after ${maxRetries} attempts: ${error.message}`
           );
-          allUsers[i].assignedRoom = room ? `Room ${room.room_number}` : "None";
-        } catch (error) {
-          console.error(
-            `Error fetching room for user ${allUsers[i].user_id}:`,
-            error
-          );
-          allUsers[i].assignedRoom = "Error";
         }
-      } else {
-        // non-residents don't have rooms
-        allUsers[i].assignedRoom = "N/A";
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
       }
     }
 
-    // Clear the loading state and apply filters
-    tableContainer.innerHTML = ""; // Clear the loading spinner
+    allUsers = allUsersData;
+
+    // Fetch room assignments in parallel for better performance
+    const roomPromises = allUsers.map(async (user) => {
+      if (user.role_name === "resident") {
+        try {
+          const room = await smartHomeApi.userRooms.getUserRoom(user.user_id);
+          return {
+            userId: user.user_id,
+            room: room ? `Room ${room.room_number}` : "None",
+          };
+        } catch (error) {
+          console.error(`Error fetching room for user ${user.user_id}:`, error);
+          return {
+            userId: user.user_id,
+            room: "Error",
+          };
+        }
+      }
+      return {
+        userId: user.user_id,
+        room: "N/A",
+      };
+    });
+
+    const roomResults = await Promise.all(roomPromises);
+
+    // Update user room assignments
+    roomResults.forEach((result) => {
+      const user = allUsers.find((u) => u.user_id === result.userId);
+      if (user) {
+        user.assignedRoom = result.room;
+      }
+    });
+
+    // Apply filters and display users
     applyFilters();
   } catch (error) {
     console.error("Error fetching users:", error);
-    // Clear the loading state and show error
-    tableContainer.innerHTML =
-      '<div class="alert alert-danger">Error loading users. Please try again later.</div>';
+    throw error; // Re-throw to be handled by the refresh button click handler
   }
 }
 
@@ -1810,10 +2046,15 @@ function displayUsers() {
   const usersToShow = filteredUsers.slice(startIndex, endIndex);
 
   // update the page counter
-  document.getElementById("currentPage").textContent = currentPage;
-  document.getElementById("totalPages").textContent = totalPages;
-  document.getElementById("prevPage").disabled = currentPage === 1;
-  document.getElementById("nextPage").disabled = currentPage === totalPages;
+  const currentPageElement = document.getElementById("currentPage");
+  const totalPagesElement = document.getElementById("totalPages");
+  const prevPageBtn = document.getElementById("prevPage");
+  const nextPageBtn = document.getElementById("nextPage");
+
+  if (currentPageElement) currentPageElement.textContent = currentPage;
+  if (totalPagesElement) totalPagesElement.textContent = totalPages;
+  if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+  if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
 
   // build the table HTML
   const table = `

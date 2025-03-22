@@ -47,6 +47,9 @@ const Utils = {
   },
 };
 
+// Global domElements object
+let domElements = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Check authentication first before doing anything else
   try {
@@ -62,13 +65,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  //cache dom elements for easy access
-  const domElements = {
+  // Initialize domElements
+  domElements = {
     mainMenu: document.querySelector("#roomControlModal .main-menu"),
     subMenus: document.querySelectorAll("#roomControlModal .sub-menu"),
     tempDisplay: document.querySelector(".temperature-display"),
     mercury: document.querySelector(".tinner"),
-    scheduleContainer: document.querySelector(".schedule-list"),
+    scheduleContainer: document.querySelector("#tempModal .schedule-list"),
     modals: {
       room: document.getElementById("roomControlModal"),
       temp: document.getElementById("tempModal"),
@@ -181,61 +184,71 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAlertButton("itHelpButton", "itHelpmsg");
 
   // Initialize energy panel handling properly
-  const energyButton = document.querySelector(".big-button[data-bs-target='#energyModal']");
+  const energyButton = document.querySelector(
+    ".big-button[data-bs-target='#energyModal']"
+  );
   const energyPanel = document.getElementById("energyPanel");
   const closeBtn = document.getElementById("closeEnergyPanel");
   // Function to ensure energy data exists for the user's room
-async function ensureEnergyData(roomId) {
-  try {
-    // Try to get energy data for the room
-    const energyData = await smartHomeApi.energy.getUsage(roomId, 'day');
-    
-    // If no data exists, generate test data
-    if (!energyData || energyData.length === 0) {
-      console.log("No energy data found for room. Generating test data...");
-      
-      // Get devices for the room
-      const devices = await smartHomeApi.devices.getByRoom(roomId);
-      
-      if (devices && devices.length > 0) {
-        // Use the first device to generate energy data
-        await smartHomeApi.test.generateEnergyData(roomId, devices[0].device_id, 24);
-        console.log("Test energy data generated successfully");
-      } else {
-        console.warn("No devices found in room. Cannot generate energy data.");
+  async function ensureEnergyData(roomId) {
+    try {
+      // Try to get energy data for the room
+      const energyData = await smartHomeApi.energy.getUsage(roomId, "day");
+
+      // If no data exists, generate test data
+      if (!energyData || energyData.length === 0) {
+        console.log("No energy data found for room. Generating test data...");
+
+        // Get devices for the room
+        const devices = await smartHomeApi.devices.getByRoom(roomId);
+
+        if (devices && devices.length > 0) {
+          // Use the first device to generate energy data
+          await smartHomeApi.test.generateEnergyData(
+            roomId,
+            devices[0].device_id,
+            24
+          );
+          console.log("Test energy data generated successfully");
+        } else {
+          console.warn(
+            "No devices found in room. Cannot generate energy data."
+          );
+        }
       }
+    } catch (error) {
+      console.error("Error ensuring energy data:", error);
     }
-  } catch (error) {
-    console.error("Error ensuring energy data:", error);
   }
-}
   if (energyButton) {
     energyButton.removeAttribute("data-bs-toggle");
     energyButton.removeAttribute("data-bs-target");
-    energyButton.addEventListener("click", async function(e) {
+    energyButton.addEventListener("click", async function (e) {
       e.preventDefault();
-      
+
       try {
         if (!AppState.currentUser) {
           console.error("No current user - cannot show energy panel");
           Utils.showError("Please log in to access energy data");
           return;
         }
-        
+
         // Basic debugging logs
         console.log("Current User:", AppState.currentUser);
-        
+
         // Get user's room
         if (!AppState.currentRoom) {
-          AppState.currentRoom = await smartHomeApi.userRooms.getUserRoom(AppState.currentUser.user_id);
+          AppState.currentRoom = await smartHomeApi.userRooms.getUserRoom(
+            AppState.currentUser.user_id
+          );
           console.log("User Room:", AppState.currentRoom);
         }
-        
+
         if (!AppState.currentRoom) {
           Utils.showError("No room assigned to this user");
           return;
         }
-        
+
         energyPanel.style.display = "block";
       } catch (error) {
         console.error("Error initializing energy panel:", error);
@@ -243,9 +256,9 @@ async function ensureEnergyData(roomId) {
       }
     });
   }
-  
+
   if (closeBtn) {
-    closeBtn.addEventListener("click", function() {
+    closeBtn.addEventListener("click", function () {
       energyPanel.style.display = "none";
     });
   }
@@ -293,29 +306,34 @@ const AppState = {
   async initialize() {
     try {
       Utils.showLoading(true);
-      
+
       try {
         this.currentUser = await smartHomeApi.users.getCurrentUser();
-        
+
         if (!this.currentUser) {
           console.log("Authentication failed - no user found");
           return false;
         }
-        
+
         if (this.currentUser?.role_name === "resident") {
           this.currentRoom = await smartHomeApi.userRooms.getUserRoom(
             this.currentUser.user_id
           );
         }
-        
+
         return true;
       } catch (error) {
-        if (error.message === "Not logged in" || error.response?.status === 401) {
+        if (
+          error.message === "Not logged in" ||
+          error.response?.status === 401
+        ) {
           console.error("User not authenticated:", error);
           return false;
         }
         console.error("Error fetching user data:", error);
-        Utils.showError("Error loading your account information. Please try logging in again.");
+        Utils.showError(
+          "Error loading your account information. Please try logging in again."
+        );
         return false;
       }
     } catch (error) {
@@ -435,12 +453,31 @@ const DeviceManager = {
 //temp control
 const TemperatureControl = {
   async initialize() {
+    console.log("Initializing temperature control...");
+
+    // Wait for domElements to be initialized if it hasn't been yet
+    if (!domElements) {
+      console.log("Waiting for DOM elements to be initialized...");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    if (!domElements) {
+      console.error("DOM elements not initialized");
+      return;
+    }
+
     if (
       !domElements.tempDisplay ||
       !domElements.mercury ||
       !domElements.scheduleContainer
-    )
+    ) {
+      console.error("Missing required elements:", {
+        tempDisplay: !!domElements.tempDisplay,
+        mercury: !!domElements.mercury,
+        scheduleContainer: !!domElements.scheduleContainer,
+      });
       return;
+    }
 
     this.loadSavedSchedule();
     this.updateScheduleDisplay();
@@ -480,9 +517,7 @@ const TemperatureControl = {
             currentHour >= period.startHour && currentHour < period.endHour
           );
         }
-        return (
-          currentHour >= period.startHour || currentHour < period.endHour
-        );
+        return currentHour >= period.startHour || currentHour < period.endHour;
       }) || AppState.schedule[0]
     );
   },
@@ -495,12 +530,21 @@ const TemperatureControl = {
   },
 
   updateScheduleDisplay() {
-    if (!domElements.scheduleContainer) return;
+    console.log("Updating schedule display...");
+    if (!domElements.scheduleContainer) {
+      console.error("Schedule container not found");
+      return;
+    }
 
     const currentPeriod = this.getCurrentPeriod();
+    console.log("Current period:", currentPeriod);
+    console.log("Full schedule:", AppState.schedule);
+
     domElements.scheduleContainer.innerHTML = AppState.schedule
       .map((period) => this.createScheduleItemHTML(period, currentPeriod))
       .join("");
+
+    console.log("Schedule display updated");
   },
 
   createScheduleItemHTML(period, currentPeriod) {
@@ -532,8 +576,7 @@ const TemperatureControl = {
     const lastChangeTime = Utils.storage.getItem("lastTempChangeTime", true);
 
     if (savedTemp && lastChangeTime) {
-      const hoursSinceChange =
-        (Date.now() - lastChangeTime) / (1000 * 60 * 60);
+      const hoursSinceChange = (Date.now() - lastChangeTime) / (1000 * 60 * 60);
 
       if (hoursSinceChange < 4 && Utils.validateTemperature(savedTemp)) {
         this.updateTemperatureDisplay(savedTemp);
@@ -593,14 +636,8 @@ const TemperatureControl = {
 
   startAutoUpdate() {
     setInterval(() => {
-      const lastChangeTime = Utils.storage.getItem(
-        "lastTempChangeTime",
-        true
-      );
-      if (
-        lastChangeTime &&
-        Date.now() - lastChangeTime >= 4 * 60 * 60 * 1000
-      ) {
+      const lastChangeTime = Utils.storage.getItem("lastTempChangeTime", true);
+      if (lastChangeTime && Date.now() - lastChangeTime >= 4 * 60 * 60 * 1000) {
         Utils.storage.removeItem("savedTemperature", true);
         Utils.storage.removeItem("lastTempChangeTime", true);
         this.initializeTemperature();

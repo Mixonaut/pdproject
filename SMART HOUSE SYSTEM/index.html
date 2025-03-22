@@ -41,13 +41,21 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Confirm Logout</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <p>Are you sure you would like to log out?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
               Cancel
             </button>
             <button type="button" class="btn btn-primary" id="confirmLogout">
@@ -76,10 +84,7 @@
         <i class="fas fa-thermometer-full"></i>
         Temperature
       </button>
-      <button
-        class="btn big-button"
-        id="energyButton"
-      >
+      <button class="btn big-button" id="energyButton">
         <i class="fas fa-bolt"></i>
         Energy Usage
       </button>
@@ -104,7 +109,8 @@
         role="alert"
         style="display: none"
       >
-        <i class="fas fa-check-circle me-2"></i> A staff member has been notified
+        <i class="fas fa-check-circle me-2"></i> A staff member has been
+        notified
       </div>
     </div>
 
@@ -116,7 +122,11 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-sliders-h me-2"></i>Room Controls
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <!-- Loading Spinner -->
@@ -130,18 +140,31 @@
               </div>
             </div>
             <!-- Error Alert -->
-            <div id="deviceLoadError" class="alert alert-danger" style="display: none">
+            <div
+              id="deviceLoadError"
+              class="alert alert-danger"
+              style="display: none"
+            >
               Error loading devices. Please try again later.
             </div>
             <!-- MAIN MENU -->
             <div class="main-menu text-center">
-              <button class="btn modal-menu-button" data-target="lights-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="lights-control"
+              >
                 <i class="fas fa-lightbulb"></i> Lights
               </button>
-              <button class="btn modal-menu-button" data-target="shutters-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="shutters-control"
+              >
                 <i class="fas fa-blinds"></i> Shutters
               </button>
-              <button class="btn modal-menu-button" data-target="climate-control">
+              <button
+                class="btn modal-menu-button"
+                data-target="climate-control"
+              >
                 <i class="fas fa-fan"></i> Climate
               </button>
               <button class="btn modal-menu-button" data-target="other-control">
@@ -198,7 +221,11 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-thermometer-full me-2"></i>Room Temperature
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="temp-control-wrapper">
@@ -216,10 +243,16 @@
                     </div>
                   </div>
                   <div class="temp-buttons">
-                    <button class="btn temp-btn plus-btn" aria-label="Make Warmer">
+                    <button
+                      class="btn temp-btn plus-btn"
+                      aria-label="Make Warmer"
+                    >
                       <i class="fas fa-plus"></i> Warmer
                     </button>
-                    <button class="btn temp-btn minus-btn" aria-label="Make Cooler">
+                    <button
+                      class="btn temp-btn minus-btn"
+                      aria-label="Make Cooler"
+                    >
                       <i class="fas fa-minus"></i> Cooler
                     </button>
                   </div>
@@ -255,13 +288,34 @@
     <!-- ENERGY PANEL: Non-Modal with Leaderboard -->
     <div
       id="energyPanel"
-      style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 800px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 1050;"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        max-width: 800px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1050;
+      "
     >
-      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 15px;
+        "
+      >
         <h4><i class="fas fa-bolt me-2"></i>Your Energy Usage</h4>
-        <button id="closeEnergyPanel" class="btn btn-sm btn-outline-secondary">&times;</button>
+        <button id="closeEnergyPanel" class="btn btn-sm btn-outline-secondary">
+          &times;
+        </button>
       </div>
-      
+
       <!-- Time Period Selection -->
       <div class="mb-3">
         <ul class="nav nav-pills" id="energyTimePeriod">
@@ -282,7 +336,7 @@
           </li>
         </ul>
       </div>
-      
+
       <div class="row">
         <!-- Left Column: Energy Summary and Chart -->
         <div class="col-md-8">
@@ -309,7 +363,7 @@
           <div class="card mb-3">
             <div class="card-body">
               <h6>Energy Usage Over Time</h6>
-              <div style="height: 300px;">
+              <div style="height: 300px">
                 <canvas id="energyChart"></canvas>
               </div>
             </div>
@@ -337,12 +391,20 @@
             <h5 class="modal-title fs-4">
               <i class="fas fa-cog me-2"></i>Settings
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
             <!-- IT Support Button -->
             <div class="itSupContainer">
-              <button type="button" class="btn modal-menu-button" id="itHelpButton">
+              <button
+                type="button"
+                class="btn modal-menu-button"
+                id="itHelpButton"
+              >
                 Call IT Support <i class="fa-solid fa-laptop"></i>
               </button>
               <div
@@ -351,14 +413,18 @@
                 role="alert"
                 style="display: none"
               >
-                <i class="fas fa-check-circle me-2"></i> IT professional is on their way
+                <i class="fas fa-check-circle me-2"></i> IT professional is on
+                their way
               </div>
             </div>
 
             <!-- Account Settings Section -->
             <div class="settings-section">
               <h4 style="color: white">
-                <i class="fa-solid fa-user me-2" style="color: white; padding-top: 20px"></i>
+                <i
+                  class="fa-solid fa-user me-2"
+                  style="color: white; padding-top: 20px"
+                ></i>
                 Account Settings
               </h4>
               <div class="toggle-container">
@@ -411,49 +477,53 @@
     <script>
       // Global variable for chart instance (locally scoped)
       let energyChart = null;
-      
+
       // Track data generation attempts to prevent infinite loops
       let dataGenerationAttempts = 0;
       const MAX_GENERATION_ATTEMPTS = 3;
 
-      document.addEventListener("DOMContentLoaded", function() {
+      document.addEventListener("DOMContentLoaded", function () {
         const energyButton = document.getElementById("energyButton");
         const energyPanel = document.getElementById("energyPanel");
         const closeBtn = document.getElementById("closeEnergyPanel");
-        
+
         if (energyButton) {
-          energyButton.addEventListener("click", async function(e) {
+          energyButton.addEventListener("click", async function (e) {
             e.preventDefault();
-            
+
             try {
               // Basic debugging logs
               console.log("Initializing energy panel...");
-              
+
               // Get current user
               const currentUser = await smartHomeApi.users.getCurrentUser();
               console.log("Current User:", currentUser);
-              
+
               if (!currentUser) {
                 alert("Authentication failed. Please log in again.");
                 window.location.href = "/login";
                 return;
               }
-              
+
               // Get user's room
-              const userRoom = await smartHomeApi.userRooms.getUserRoom(currentUser.user_id);
+              const userRoom = await smartHomeApi.userRooms.getUserRoom(
+                currentUser.user_id
+              );
               console.log("User Room:", userRoom);
-              
+
               if (!userRoom || !userRoom.room_id) {
-                alert("No room assigned to this user. Please contact an administrator.");
+                alert(
+                  "No room assigned to this user. Please contact an administrator."
+                );
                 return;
               }
-              
+
               // Show the energy panel
               energyPanel.style.display = "block";
-              
+
               // Reset data generation attempts counter
               dataGenerationAttempts = 0;
-              
+
               // Initialize energy panel with data
               await initializeEnergyPanel(userRoom.room_id);
             } catch (error) {
@@ -462,154 +532,178 @@
             }
           });
         }
-        
+
         if (closeBtn) {
-          closeBtn.addEventListener("click", function() {
+          closeBtn.addEventListener("click", function () {
             energyPanel.style.display = "none";
           });
         }
-        
+
         // Add this new function to initialize the energy panel data
         async function initializeEnergyPanel(roomId) {
           try {
             // Set active period (default to 'day')
-            const periodButtons = document.querySelectorAll('#energyTimePeriod .time-period-button');
-            let activePeriod = 'day';
-            
+            const periodButtons = document.querySelectorAll(
+              "#energyTimePeriod .time-period-button"
+            );
+            let activePeriod = "day";
+
             // Add event listeners to period buttons
-            periodButtons.forEach(button => {
-              button.addEventListener('click', function() {
+            periodButtons.forEach((button) => {
+              button.addEventListener("click", function () {
                 // Remove active class from all buttons
-                periodButtons.forEach(btn => btn.classList.remove('active'));
+                periodButtons.forEach((btn) => btn.classList.remove("active"));
                 // Add active class to clicked button
-                this.classList.add('active');
+                this.classList.add("active");
                 // Update period and reload data
                 activePeriod = this.dataset.value;
-                
+
                 // Reset attempts counter when changing periods
                 dataGenerationAttempts = 0;
-                
+
                 loadEnergyData(roomId, activePeriod);
               });
             });
-            
+
             // Check if there's any energy data for this room
             await ensureEnergyData(roomId);
-            
+
             // Load initial data
             await loadEnergyData(roomId, activePeriod);
           } catch (error) {
             console.error("Error in energy panel initialization:", error);
           }
         }
-        
+
         // Function to ensure energy data exists for the user's room
         async function ensureEnergyData(roomId) {
           try {
             // Try to get energy data for the room
-            const energyData = await smartHomeApi.energy.getUsage(roomId, 'day');
-            
+            const energyData = await smartHomeApi.energy.getUsage(
+              roomId,
+              "day"
+            );
+
             // If no data exists, generate test data
             if (!energyData || energyData.length === 0) {
-              console.log("No energy data found for room. Generating test data...");
-              
+              console.log(
+                "No energy data found for room. Generating test data..."
+              );
+
               // Get devices for the room
               const devices = await smartHomeApi.devices.getByRoom(roomId);
-              
+
               if (devices && devices.length > 0) {
                 // Use the first device to generate energy data
-                await smartHomeApi.test.generateEnergyData(roomId, devices[0].device_id, 24);
+                await smartHomeApi.test.generateEnergyData(
+                  roomId,
+                  devices[0].device_id,
+                  24
+                );
                 console.log("Test energy data generated successfully");
               } else {
-                console.warn("No devices found in room. Cannot generate energy data.");
+                console.warn(
+                  "No devices found in room. Cannot generate energy data."
+                );
               }
             }
           } catch (error) {
             console.error("Error ensuring energy data:", error);
           }
         }
-        
+
         // Function to load energy data and update the chart
         async function loadEnergyData(roomId, period) {
           try {
-            console.log(`Loading energy data for room ${roomId}, period: ${period}`);
-            
+            console.log(
+              `Loading energy data for room ${roomId}, period: ${period}`
+            );
+
             // Show loading state
-            const chartElement = document.getElementById('energyChart');
-            if (chartElement) chartElement.style.opacity = '0.5';
-            
+            const chartElement = document.getElementById("energyChart");
+            if (chartElement) chartElement.style.opacity = "0.5";
+
             // Fetch energy data
             const data = await smartHomeApi.energy.getUsage(roomId, period);
             console.log("Energy data received:", data);
-            
+
             if (!data || data.length === 0) {
-              console.warn("No energy data returned from API. Using example data.");
+              console.warn(
+                "No energy data returned from API. Using example data."
+              );
               useHardcodedExample();
               return;
             }
-            
+
             // Reset generation attempts on successful data load
             dataGenerationAttempts = 0;
-            
+
             // Update chart with real data
             updateEnergyChart(data);
-            
+
             // Update total display
             updateTotalEnergy(data);
-            
+
             // Update comparison with yesterday
             updateYesterdayComparison(roomId, period);
-            
+
             // Update leaderboard
             populateLeaderboard();
-            
+
             // Restore chart visibility
-            if (chartElement) chartElement.style.opacity = '1';
+            if (chartElement) chartElement.style.opacity = "1";
           } catch (error) {
             console.error("Error loading energy data:", error);
-            
+
             // If we've tried too many times, fall back to hardcoded example
             if (dataGenerationAttempts >= MAX_GENERATION_ATTEMPTS) {
-              console.warn(`Exceeded ${MAX_GENERATION_ATTEMPTS} attempts to generate data, using hardcoded example`);
+              console.warn(
+                `Exceeded ${MAX_GENERATION_ATTEMPTS} attempts to generate data, using hardcoded example`
+              );
               useHardcodedExample();
               return;
             }
-            
+
             // Otherwise try to generate example data
             generateExampleData(roomId);
           }
         }
-        
+
         // Generate example data when no real data exists
         async function generateExampleData(roomId) {
           try {
             console.log("Generating example data for the room");
-            
+
             // Increment the generation attempt counter
             dataGenerationAttempts++;
-            
+
             // First try to get a device for this room
             const devices = await smartHomeApi.devices.getByRoom(roomId);
-            
+
             if (devices && devices.length > 0) {
               // Use the first device to generate test data
-              await smartHomeApi.test.generateEnergyData(roomId, devices[0].device_id, 24);
+              await smartHomeApi.test.generateEnergyData(
+                roomId,
+                devices[0].device_id,
+                24
+              );
               console.log("Generated test energy data");
-              
+
               // Now load the newly generated data
-              await smartHomeApi.energy.getUsage(roomId, 'day')
-                .then(data => {
+              await smartHomeApi.energy
+                .getUsage(roomId, "day")
+                .then((data) => {
                   if (data && data.length > 0) {
                     updateEnergyChart(data);
                     updateTotalEnergy(data);
-                    updateYesterdayComparison(roomId, 'day');
+                    updateYesterdayComparison(roomId, "day");
                     populateLeaderboard();
                   } else {
                     // If still no data, use hardcoded example
                     useHardcodedExample();
                   }
                 })
-                .catch(err => {
+                .catch((err) => {
                   console.error("Failed to load newly generated data:", err);
                   useHardcodedExample();
                 });
@@ -623,48 +717,67 @@
             useHardcodedExample();
           }
         }
-        
+
         // Use hardcoded example data
         function useHardcodedExample() {
           console.log("Using hardcoded example data");
-          
+
           // Example data that matches the API format
           const exampleData = [
-            {"hour":0,"energy":"1.40"},{"hour":1,"energy":"0.75"},
-            {"hour":2,"energy":"0.80"},{"hour":3,"energy":"0.97"},
-            {"hour":4,"energy":"1.12"},{"hour":5,"energy":"0.93"},
-            {"hour":6,"energy":"1.10"},{"hour":7,"energy":"3.45"},
-            {"hour":8,"energy":"2.65"},{"hour":9,"energy":"3.67"},
-            {"hour":10,"energy":"2.01"},{"hour":11,"energy":"1.98"},
-            {"hour":12,"energy":"2.31"},{"hour":13,"energy":"1.78"},
-            {"hour":14,"energy":"1.38"},{"hour":15,"energy":"1.32"},
-            {"hour":16,"energy":"4.63"},{"hour":17,"energy":"6.01"},
-            {"hour":18,"energy":"4.10"},{"hour":19,"energy":"2.85"},
-            {"hour":20,"energy":"5.01"},{"hour":21,"energy":"3.50"},
-            {"hour":22,"energy":"0.77"},{"hour":23,"energy":"0.92"}
+            { hour: 0, energy: "1.40" },
+            { hour: 1, energy: "0.75" },
+            { hour: 2, energy: "0.80" },
+            { hour: 3, energy: "0.97" },
+            { hour: 4, energy: "1.12" },
+            { hour: 5, energy: "0.93" },
+            { hour: 6, energy: "1.10" },
+            { hour: 7, energy: "3.45" },
+            { hour: 8, energy: "2.65" },
+            { hour: 9, energy: "3.67" },
+            { hour: 10, energy: "2.01" },
+            { hour: 11, energy: "1.98" },
+            { hour: 12, energy: "2.31" },
+            { hour: 13, energy: "1.78" },
+            { hour: 14, energy: "1.38" },
+            { hour: 15, energy: "1.32" },
+            { hour: 16, energy: "4.63" },
+            { hour: 17, energy: "6.01" },
+            { hour: 18, energy: "4.10" },
+            { hour: 19, energy: "2.85" },
+            { hour: 20, energy: "5.01" },
+            { hour: 21, energy: "3.50" },
+            { hour: 22, energy: "0.77" },
+            { hour: 23, energy: "0.92" },
           ];
-          
+
           updateEnergyChart(exampleData);
           updateTotalEnergy(exampleData);
-          
+
           // Also update other displays with mock data
-          document.getElementById('yesterdayComparison').innerHTML = '<span style="color:green">-8.5%</span>';
-          document.getElementById('residentialAverage').textContent = '24.7 kWh';
-          
+          document.getElementById("yesterdayComparison").innerHTML =
+            '<span style="color:green">-8.5%</span>';
+          document.getElementById("residentialAverage").textContent =
+            "24.7 kWh";
+
           // Update leaderboard
           populateLeaderboard();
         }
-        
+
         // Update comparison with yesterday's usage
         async function updateYesterdayComparison(roomId, period) {
           try {
-            const comparison = await smartHomeApi.energy.getComparison(roomId, period);
-            const yesterdayComparison = document.getElementById('yesterdayComparison');
-            
+            const comparison = await smartHomeApi.energy.getComparison(
+              roomId,
+              period
+            );
+            const yesterdayComparison = document.getElementById(
+              "yesterdayComparison"
+            );
+
             if (comparison && yesterdayComparison) {
               const change = comparison.percentageChange || 0;
               const formattedChange = Math.abs(change).toFixed(1);
-              
+
               if (change > 0) {
                 yesterdayComparison.innerHTML = `<span style="color:red">+${formattedChange}%</span>`;
               } else if (change < 0) {
@@ -675,51 +788,54 @@
             }
           } catch (error) {
             console.error("Error fetching comparison data:", error);
-            document.getElementById('yesterdayComparison').textContent = 'N/A';
+            document.getElementById("yesterdayComparison").textContent = "N/A";
           }
         }
-        
+
         // Function to update residential average (mock data)
         function updateResidentialAverage(data) {
-          const avgElement = document.getElementById('residentialAverage');
+          const avgElement = document.getElementById("residentialAverage");
           if (avgElement) {
             // Calculate a slightly higher average as benchmark
-            const total = data.reduce((sum, item) => sum + parseFloat(item.energy || 0), 0);
+            const total = data.reduce(
+              (sum, item) => sum + parseFloat(item.energy || 0),
+              0
+            );
             const average = (total * 1.15).toFixed(2); // 15% higher than user's usage
             avgElement.textContent = `${average} kWh`;
           }
         }
-        
+
         // Update the energy chart - FIXED VERSION
         function updateEnergyChart(energyData) {
           // Prepare the data for Chart.js
           const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
           const energyValues = Array(24).fill(0);
-          
+
           console.log("Preparing chart data from:", energyData);
-          
+
           // Map the data to hours
-          energyData.forEach(item => {
+          energyData.forEach((item) => {
             const hour = parseInt(item.hour);
             const energy = parseFloat(item.energy);
-            
+
             if (hour >= 0 && hour < 24 && !isNaN(energy)) {
               energyValues[hour] = energy;
             }
           });
-          
+
           console.log("Final chart data:", energyValues);
-          
+
           // Get the chart context
           const ctx = document.getElementById("energyChart");
           if (!ctx) {
             console.error("Could not find chart element");
             return;
           }
-          
+
           try {
             // Clean up old chart instance if it exists
-            if (typeof energyChart !== 'undefined' && energyChart) {
+            if (typeof energyChart !== "undefined" && energyChart) {
               try {
                 energyChart.destroy();
               } catch (e) {
@@ -727,19 +843,21 @@
                 // Just continue - we'll create a new one anyway
               }
             }
-            
+
             // Create new chart
             energyChart = new Chart(ctx, {
-              type: 'bar',
+              type: "bar",
               data: {
                 labels: hours,
-                datasets: [{
-                  label: 'Energy Usage (kWh)',
-                  data: energyValues,
-                  backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                  borderColor: 'rgba(75, 192, 192, 1)',
-                  borderWidth: 1
-                }]
+                datasets: [
+                  {
+                    label: "Energy Usage (kWh)",
+                    data: energyValues,
+                    backgroundColor: "rgba(75, 192, 192, 0.6)",
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 1,
+                  },
+                ],
               },
               options: {
                 responsive: true,
@@ -749,13 +867,13 @@
                     beginAtZero: true,
                     title: {
                       display: true,
-                      text: 'Energy (kWh)'
-                    }
-                  }
-                }
-              }
+                      text: "Energy (kWh)",
+                    },
+                  },
+                },
+              },
             });
-            
+
             // Update residential average
             updateResidentialAverage(energyData);
           } catch (error) {
@@ -764,57 +882,62 @@
             useHardcodedExample();
           }
         }
-        
+
         // Update total energy display
         function updateTotalEnergy(energyData) {
           const totalElement = document.getElementById("todayEnergyUsage");
-          
+
           if (!totalElement) return;
-          
+
           // Calculate total energy from all hours with better error handling
           let total = 0;
-          energyData.forEach(item => {
+          energyData.forEach((item) => {
             const energy = parseFloat(item.energy);
             if (!isNaN(energy)) {
               total += energy;
             }
           });
-          
+
           console.log(`Total energy: ${total.toFixed(2)} kWh`);
-          
+
           // Update display
           totalElement.textContent = `${total.toFixed(2)} kWh`;
         }
-        
+
         // Function to populate leaderboard with mock data
         function populateLeaderboard() {
-          const leaderboardContent = document.getElementById('leaderboardContent');
+          const leaderboardContent =
+            document.getElementById("leaderboardContent");
           if (!leaderboardContent) return;
-          
+
           // Generate mock leaderboard data
           const residents = [
-            { name: 'Room 101', usage: 16.3, reduction: -5.2 },
-            { name: 'Room 104', usage: 17.8, reduction: -3.5 },
-            { name: 'Your Room', usage: 19.2, reduction: -2.8 },
-            { name: 'Room 102', usage: 21.5, reduction: -1.4 },
-            { name: 'Room 105', usage: 23.7, reduction: +2.1 },
-            { name: 'Room 103', usage: 25.9, reduction: +4.3 }
+            { name: "Room 101", usage: 16.3, reduction: -5.2 },
+            { name: "Room 104", usage: 17.8, reduction: -3.5 },
+            { name: "Your Room", usage: 19.2, reduction: -2.8 },
+            { name: "Room 102", usage: 21.5, reduction: -1.4 },
+            { name: "Room 105", usage: 23.7, reduction: +2.1 },
+            { name: "Room 103", usage: 25.9, reduction: +4.3 },
           ];
-          
+
           // Sort by usage
           residents.sort((a, b) => a.usage - b.usage);
-          
+
           // Create HTML
           let html = '<ul class="list-group">';
-          
+
           residents.forEach((resident, index) => {
-            const isUser = resident.name === 'Your Room';
-            const color = resident.reduction < 0 ? 'text-success' : 'text-danger';
-            const arrow = resident.reduction < 0 ? '↓' : '↑';
-            const badge = index < 3 ? `<span class="badge bg-success">Top ${index+1}</span>` : '';
-            
+            const isUser = resident.name === "Your Room";
+            const color =
+              resident.reduction < 0 ? "text-success" : "text-danger";
+            const arrow = resident.reduction < 0 ? "↓" : "↑";
+            const badge =
+              index < 3
+                ? `<span class="badge bg-success">Top ${index + 1}</span>`
+                : "";
+
             html += `
-              <li class="list-group-item ${isUser ? 'active' : ''}">
+              <li class="list-group-item ${isUser ? "active" : ""}">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <strong>${resident.name}</strong> ${badge}
@@ -827,11 +950,11 @@
               </li>
             `;
           });
-          
-          html += '</ul>';
+
+          html += "</ul>";
           leaderboardContent.innerHTML = html;
         }
-        
+
         // Initialize leaderboard on page load
         populateLeaderboard();
       });

@@ -295,7 +295,7 @@
       </div>
 
       <!-- USER MANAGEMENT SECTION -->
-       
+
       <div id="sectionUsers" class="d-none">
         <!-- Combined User Management Card -->
         <div class="card">
@@ -308,16 +308,28 @@
           >
             <h5 class="mb-0 d-flex justify-content-between align-items-center">
               <span>User Management</span>
-              <button
-                class="btn"
-                id="btnAddUser"
-                style="
-                  background-color: var(--positive-feedback);
-                  color: var(--text-color);
-                "
-              >
-                <i class="fas fa-user-plus"></i> Add User
-              </button>
+              <div>
+                <button
+                  class="btn me-2"
+                  id="btnRefreshUsers"
+                  style="
+                    background-color: var(--surface-color);
+                    color: var(--text-color);
+                  "
+                >
+                  <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button
+                  class="btn"
+                  id="btnAddUser"
+                  style="
+                    background-color: var(--positive-feedback);
+                    color: var(--text-color);
+                  "
+                >
+                  <i class="fas fa-user-plus"></i> Add User
+                </button>
+              </div>
             </h5>
           </div>
           <div
@@ -532,34 +544,37 @@
     <script src="admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add this script just before the Bootstrap script import -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  // Your new leaderboard script goes here
-  document.addEventListener("DOMContentLoaded", function() {
-    // Function to fetch and update admin leaderboard
-    async function fetchAdminLeaderboard(period = 'day') {
-      try {
-        const leaderboardData = await smartHomeApi.leaderboard.get(period);
-        updateAdminLeaderboard(leaderboardData);
-      } catch (error) {
-        console.error("Error fetching admin leaderboard:", error);
-        const leaderboardContent = document.getElementById("leaderboardContent");
-        if (leaderboardContent) {
-          leaderboardContent.innerHTML = '<div class="alert alert-danger">Error loading leaderboard</div>';
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Your new leaderboard script goes here
+      document.addEventListener("DOMContentLoaded", function () {
+        // Function to fetch and update admin leaderboard
+        async function fetchAdminLeaderboard(period = "day") {
+          try {
+            const leaderboardData = await smartHomeApi.leaderboard.get(period);
+            updateAdminLeaderboard(leaderboardData);
+          } catch (error) {
+            console.error("Error fetching admin leaderboard:", error);
+            const leaderboardContent =
+              document.getElementById("leaderboardContent");
+            if (leaderboardContent) {
+              leaderboardContent.innerHTML =
+                '<div class="alert alert-danger">Error loading leaderboard</div>';
+            }
+          }
         }
-      }
-    }
 
-    function updateAdminLeaderboard(data) {
-      const leaderboardContent = document.getElementById("leaderboardContent");
-      if (!leaderboardContent) return;
+        function updateAdminLeaderboard(data) {
+          const leaderboardContent =
+            document.getElementById("leaderboardContent");
+          if (!leaderboardContent) return;
 
-      // Create table for leaderboard
-      const table = document.createElement('table');
-      table.className = 'table table-striped';
-      
-      // Table header
-      table.innerHTML = `
+          // Create table for leaderboard
+          const table = document.createElement("table");
+          table.className = "table table-striped";
+
+          // Table header
+          table.innerHTML = `
         <thead>
           <tr>
             <th>Rank</th>
@@ -569,41 +584,47 @@
           </tr>
         </thead>
         <tbody>
-          ${data.map(entry => `
+          ${data
+            .map(
+              (entry) => `
             <tr>
               <td>${entry.rank}</td>
               <td>${entry.firstName || entry.username}</td>
               <td>Room ${entry.roomNumber}</td>
               <td>${entry.totalEnergy.toFixed(2)}</td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join("")}
         </tbody>
       `;
 
-      leaderboardContent.innerHTML = '';
-      leaderboardContent.appendChild(table);
-    }
+          leaderboardContent.innerHTML = "";
+          leaderboardContent.appendChild(table);
+        }
 
-    // Initialize leaderboard on page load
-    fetchAdminLeaderboard();
+        // Initialize leaderboard on page load
+        fetchAdminLeaderboard();
 
-    // Add event listeners to time period buttons
-    const timePeriodButtons = document.querySelectorAll('.time-period-button');
-    timePeriodButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        // Remove active class from all buttons
-        timePeriodButtons.forEach(btn => btn.classList.remove('active'));
-        
-        // Add active class to clicked button
-        this.classList.add('active');
-        
-        // Fetch leaderboard for selected period
-        const period = this.dataset.value;
-        fetchAdminLeaderboard(period);
+        // Add event listeners to time period buttons
+        const timePeriodButtons = document.querySelectorAll(
+          ".time-period-button"
+        );
+        timePeriodButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            // Remove active class from all buttons
+            timePeriodButtons.forEach((btn) => btn.classList.remove("active"));
+
+            // Add active class to clicked button
+            this.classList.add("active");
+
+            // Fetch leaderboard for selected period
+            const period = this.dataset.value;
+            fetchAdminLeaderboard(period);
+          });
+        });
       });
-    });
-  });
-</script>
-<script src="admin.js"></script>
+    </script>
+    <script src="admin.js"></script>
   </body>
 </html>

@@ -182,7 +182,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setupAlertButton("fallAlertButton", "fallAlertMessage");
   setupAlertButton("itHelpButton", "itHelpmsg");
+  // Setup logout functionality
+const btnLogout = document.getElementById("btnLogout");
+const logoutConfirmModal = document.getElementById("logoutConfirmModal");
+const confirmLogout = document.getElementById("confirmLogout");
 
+if (btnLogout) {
+  btnLogout.addEventListener("click", function() {
+    // Show the confirmation modal
+    const modal = new bootstrap.Modal(logoutConfirmModal);
+    modal.show();
+  });
+}
+
+if (confirmLogout) {
+  confirmLogout.addEventListener("click", async function() {
+    try {
+      // Hide the modal
+      const modal = bootstrap.Modal.getInstance(logoutConfirmModal);
+      if (modal) modal.hide();
+      
+      // Clear application state
+      AppState.reset();
+      
+      // Clear any session cookies by making a GET request to a logout endpoint
+      // Note: You might need to implement this endpoint on your server
+      
+      // Redirect to login page
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error during logout:", error);
+      Utils.showError("Error logging out. Please try again.");
+    }
+  });
+}
   // Initialize energy panel handling properly
   const energyButton = document.querySelector(
     ".big-button[data-bs-target='#energyModal']"

@@ -493,8 +493,8 @@ app.get("/api/rooms/with-users", async (req, res) => {
 app.get("/api/energy/leaderboard", async (req, res) => {
   try {
     // Get the period from query (default to day)
-    const period = req.query.period || 'day';
-    
+    const period = req.query.period || "day";
+
     // SQL to get leaderboard with user details and total energy usage
     const sql = `
       SELECT 
@@ -516,9 +516,13 @@ app.get("/api/energy/leaderboard", async (req, res) => {
       JOIN 
         users u ON ud.user_id = u.user_id
       WHERE 
-        ${period === 'day' ? 'DATE(eu.timestamp) = CURDATE()' : 
-         period === 'month' ? 'MONTH(eu.timestamp) = MONTH(CURDATE()) AND YEAR(eu.timestamp) = YEAR(CURDATE())' : 
-         'YEAR(eu.timestamp) = YEAR(CURDATE())'}
+        ${
+          period === "day"
+            ? "DATE(eu.timestamp) = CURDATE()"
+            : period === "month"
+            ? "MONTH(eu.timestamp) = MONTH(CURDATE()) AND YEAR(eu.timestamp) = YEAR(CURDATE())"
+            : "YEAR(eu.timestamp) = YEAR(CURDATE())"
+        }
       GROUP BY 
         u.user_id, u.username, ud.first_name, ud.last_name, r.room_number
       ORDER BY 
@@ -529,21 +533,21 @@ app.get("/api/energy/leaderboard", async (req, res) => {
     const leaderboard = await db.query(sql);
 
     // Transform results to anonymize if needed
-    const anonymizedLeaderboard = leaderboard.map(entry => ({
+    const anonymizedLeaderboard = leaderboard.map((entry) => ({
       rank: entry.energy_rank,
       username: entry.username,
       firstName: entry.first_name,
       roomNumber: entry.room_number,
       totalEnergy: parseFloat(entry.total_energy),
-      anonymous: false  // Can be used to hide identifying info if needed
+      anonymous: false, // Can be used to hide identifying info if needed
     }));
 
     res.json(anonymizedLeaderboard);
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
-    res.status(500).json({ 
-      error: "Failed to retrieve leaderboard", 
-      details: error.message 
+    res.status(500).json({
+      error: "Failed to retrieve leaderboard",
+      details: error.message,
     });
   }
 });
@@ -565,6 +569,112 @@ app.post("/users/:userId/reset-password", async (req, res) => {
   } catch (error) {
     console.error("Error resetting password:", error);
     res.status(500).json({ error: "Failed to reset password" });
+  }
+});
+
+// Alert routes
+app.post("/api/alerts", async (req, res) => {
+  try {
+    const { roomId, alertType, message } = req.body;
+    const userId = req.session.userId;
+
+    console.log("Creating alert with data:", {
+      roomId,
+      alertType,
+      message,
+      userId,
+      session: req.session,
+    });
+
+    // Validate room exists
+    const room = await db.query("SELECT * FROM rooms WHERE room_id = ?", [
+      roomId,
+    ]);
+    if (!room.length) {
+      console.log("Room not found:", roomId);
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Create alert with user_id and status as 'active'
+    const result = await db.query(
+      "INSERT INTO alerts (room_id, user_id, alert_type, message, status) VALUES (?, ?, ?, ?, 'active')",
+      [roomId, userId, alertType, message]
+    );
+
+    console.log("Alert created successfully:", result);
+
+    // Verify the alert was created
+    const createdAlert = await db.query(
+      "SELECT * FROM alerts WHERE alert_id = ?",
+      [result.insertId]
+    );
+    console.log("Verified alert:", createdAlert[0]);
+
+    res.json({
+      success: true,
+      alertId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Error creating alert:", error);
+    res.status(500).json({ error: "Failed to create alert" });
+  }
+});
+
+app.get("/api/alerts", async (req, res) => {
+  try {
+    console.log("Fetching all pending alerts...");
+    console.log("Session state:", req.session);
+
+    // Get all active alerts with room and user information
+    const alerts = await db.query(`
+      SELECT 
+        a.*,
+        r.room_number,
+        u.username
+      FROM alerts a
+      JOIN rooms r ON a.room_id = r.room_id
+      LEFT JOIN users u ON a.user_id = u.user_id
+      WHERE a.status = 'active'
+      ORDER BY a.created_at DESC
+    `);
+
+    console.log("Found alerts:", alerts);
+    console.log("Number of alerts found:", alerts.length);
+
+    res.json(alerts);
+  } catch (error) {
+    console.error("Error fetching alerts:", error);
+    res.status(500).json({ error: "Failed to fetch alerts" });
+  }
+});
+
+app.put("/api/alerts/:alertId/resolve", async (req, res) => {
+  try {
+    const { alertId } = req.params;
+
+    await db.query(
+      "UPDATE alerts SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP WHERE alert_id = ?",
+      [alertId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error resolving alert:", error);
+    res.status(500).json({ error: "Failed to resolve alert" });
+  }
+});
+
+// Update existing alerts to have correct status
+app.put("/api/alerts/update-status", async (req, res) => {
+  try {
+    // Update all active alerts to pending
+    await db.query(
+      "UPDATE alerts SET status = 'pending' WHERE status = 'active'"
+    );
+    res.json({ message: "Alert statuses updated successfully" });
+  } catch (error) {
+    console.error("Error updating alert statuses:", error);
+    res.status(500).json({ error: "Failed to update alert statuses" });
   }
 });
 

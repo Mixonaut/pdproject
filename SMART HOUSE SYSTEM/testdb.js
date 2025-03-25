@@ -67,6 +67,23 @@ async function testDatabaseConnection() {
           `);
           console.log("✅ Rooms table created or already exists");
 
+          // Alerts table
+          await db.query(`
+            CREATE TABLE IF NOT EXISTS alerts (
+              alert_id INT PRIMARY KEY AUTO_INCREMENT,
+              room_id INT NOT NULL,
+              user_id INT NULL,
+              alert_type VARCHAR(50) NOT NULL,
+              message TEXT NOT NULL,
+              status VARCHAR(20) DEFAULT 'pending',
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              resolved_at TIMESTAMP NULL,
+              FOREIGN KEY (room_id) REFERENCES rooms(room_id),
+              FOREIGN KEY (user_id) REFERENCES users(user_id)
+            )
+          `);
+          console.log("✅ Alerts table created or already exists");
+
           // Add some test rooms if none exist
           const roomCount = await db.query(
             "SELECT COUNT(*) as count FROM rooms"

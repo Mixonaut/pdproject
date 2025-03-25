@@ -1539,12 +1539,6 @@ async function editUser(userId) {
                     <option value="1" ${
                       user.role_name === "resident" ? "selected" : ""
                     }>Resident</option>
-                    <option value="2" ${
-                      user.role_name === "staff" ? "selected" : ""
-                    }>Staff</option>
-                    <option value="3" ${
-                      user.role_name === "manager" ? "selected" : ""
-                    }>Manager</option>
                     <option value="4" ${
                       user.role_name === "admin" ? "selected" : ""
                     }>Admin</option>
@@ -1687,8 +1681,6 @@ function addUser() {
                   <label for="newRole" class="form-label">Role</label>
                   <select class="form-select" id="newRole" required>
                     <option value="1">Resident</option>
-                    <option value="2">Staff</option>
-                    <option value="3">Manager</option>
                     <option value="4">Admin</option>
                   </select>
                 </div>
@@ -2492,70 +2484,118 @@ async function updateEnergySummary() {
  *******************************************/
 
 // View alerts
-function viewAlerts() {
-  const alertsModal = document.getElementById("alertsModal");
-  const alertsList = document.getElementById("alertsList");
+async function viewAlerts() {
+  try {
+    // Show loading state
+    const alertsList = document.getElementById("alertsList");
+    alertsList.innerHTML =
+      '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading alerts...</span></div></div>';
 
-  // Add loading indicator
-  alertsList.innerHTML = `
-    <div class="text-center my-3">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading alerts...</span>
-      </div>
-    </div>
-  `;
+    // Show the modal
+    const alertsModal = new bootstrap.Modal(
+      document.getElementById("alertsModal")
+    );
+    alertsModal.show();
 
-  // Show modal
-  const modal = new bootstrap.Modal(alertsModal);
-  modal.show();
+    // Fetch alerts
+    const alerts = await smartHomeApi.alerts.getAll();
 
-  setTimeout(() => {
-    alertsList.innerHTML = `
-      <div class="list-group">
-        <div class="list-group-item list-group-item-warning">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">Light left on in Room 101</h5>
-            <small>2 hours ago</small>
+    if (!alerts || alerts.length === 0) {
+      alertsList.innerHTML =
+        '<div class="alert alert-info">No pending alerts</div>';
+      return;
+    }
+
+    // Generate HTML for each alert
+    alertsList.innerHTML = alerts
+      .map(
+        (alert) => `
+      <div class="alert ${getAlertClass(alert.alert_type)} mb-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="alert-heading">${getAlertTitle(alert)}</h5>
+            <p class="mb-1">Room: ${alert.room_number}</p>
+            <p class="mb-0"><small>${getTimeAgo(alert.created_at)}</small></p>
           </div>
-          <p class="mb-1">Bedroom light has been on for over 8 hours with no movement detected.</p>
-          <button class="btn btn-sm btn-primary resolve-alert" data-alert-id="1">Resolve</button>
-        </div>
-        <div class="list-group-item list-group-item-danger">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">Fall detected in Room 103</h5>
-            <small>10 minutes ago</small>
-          </div>
-          <p class="mb-1">Sensors detected a potential fall. Staff has been notified.</p>
-          <button class="btn btn-sm btn-primary resolve-alert" data-alert-id="2">Resolve</button>
-        </div>
-        <div class="list-group-item list-group-item-info">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">High temperature in Room 105</h5>
-            <small>30 minutes ago</small>
-          </div>
-          <p class="mb-1">Room temperature is above 26°C for more than 2 hours.</p>
-          <button class="btn btn-sm btn-primary resolve-alert" data-alert-id="3">Resolve</button>
+          <button class="btn btn-sm btn-outline-success resolve-btn" data-alert-id="${
+            alert.alert_id
+          }">
+            Resolve
+          </button>
         </div>
       </div>
-    `;
+    `
+      )
+      .join("");
 
     // Add event listeners to resolve buttons
-    document.querySelectorAll(".resolve-alert").forEach((button) => {
-      button.addEventListener("click", function () {
-        const alertId = this.dataset.alertId;
-        console.log(`Resolving alert ${alertId}`);
+    alertsList.querySelectorAll(".resolve-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const alertId = button.dataset.alertId;
+        try {
+          await smartHomeApi.alerts.resolve(alertId);
+          // Remove the alert from the view
+          button.closest(".alert").remove();
 
-        // Remove the alert from the list
-        this.closest(".list-group-item").remove();
-
-        // If no alerts left, show message
-        if (document.querySelectorAll(".list-group-item").length === 0) {
-          alertsList.innerHTML =
-            '<div class="alert alert-success">No active alerts.</div>';
+          // If no alerts left, show message
+          if (alertsList.querySelectorAll(".alert").length === 0) {
+            alertsList.innerHTML =
+              '<div class="alert alert-info">No pending alerts</div>';
+          }
+        } catch (error) {
+          console.error("Error resolving alert:", error);
+          alert("Failed to resolve alert. Please try again.");
         }
       });
     });
-  }, 1000);
+  } catch (error) {
+    console.error("Error fetching alerts:", error);
+    const alertsList = document.getElementById("alertsList");
+    alertsList.innerHTML =
+      '<div class="alert alert-danger">Failed to load alerts. Please try again.</div>';
+  }
+}
+
+// Helper functions for alert display
+function getAlertClass(alertType) {
+  switch (alertType) {
+    case "fall":
+      return "danger";
+    case "temperature":
+      return "info";
+    case "device":
+      return "warning";
+    default:
+      return "secondary";
+  }
+}
+
+function getAlertTitle(alert) {
+  switch (alert.alert_type) {
+    case "fall":
+      return `Fall detected in Room ${alert.room_number}`;
+    case "temperature":
+      return `Temperature alert in Room ${alert.room_number}`;
+    case "device":
+      return `Device alert in Room ${alert.room_number}`;
+    default:
+      return `Alert in Room ${alert.room_number}`;
+  }
+}
+
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const alertTime = new Date(timestamp);
+  const diffInMinutes = Math.floor((now - alertTime) / (1000 * 60));
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hours ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} days ago`;
 }
 
 /*******************************************

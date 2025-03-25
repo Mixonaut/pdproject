@@ -1,4 +1,4 @@
-// server.js - Main application server
+//server.js
 const express = require("express");
 const app = express();
 const path = require("path");
@@ -6,16 +6,16 @@ const db = require("./db");
 const auth = require("./auth");
 const bcrypt = require("bcrypt");
 
-// Import service modules
+//import service modules
 const energyService = require("./energyService");
 const deviceService = require("./deviceService");
 const userRoomService = require("./userRoomService");
 
-// Middleware
+//middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Session middleware (if not already present)
+//session middleware (if not already present)
 const session = require("express-session");
 app.use(
   session({
@@ -26,15 +26,15 @@ app.use(
   })
 );
 
-// Initialize database and create default users
+//initialize database and create default users
 async function initializeApp() {
   try {
-    // Test database connection
+    //test database connection
     const connected = await db.testConnection();
     if (connected) {
       console.log("Connected to database successfully");
 
-      // Create default users if needed
+      //create default users if needed
       await auth.createDefaultUsers();
     } else {
       console.error("Failed to connect to database");
@@ -44,10 +44,10 @@ async function initializeApp() {
   }
 }
 
-// Initialize the application
+//initialize the application
 initializeApp();
 
-// Login route - uses MySQL database
+//login route - uses MySQL database
 app.post("/users/login", async (req, res) => {
   try {
     const { name, password } = req.body;
@@ -58,11 +58,11 @@ app.post("/users/login", async (req, res) => {
 
     if (result.success) {
       console.log(`User ${name} logged in successfully as ${result.role}`);
-      // Store user data in session
+      //store user data in session
       req.session.userId = result.user_id;
       req.session.role = result.role;
 
-      // Return user data along with redirect URL
+      //return user data along with redirect URL
       res.json({
         success: true,
         user: {
@@ -88,12 +88,12 @@ app.post("/users/login", async (req, res) => {
   }
 });
 
-// User registration route
+//user registration route
 app.post("/users", async (req, res) => {
   try {
     const { name, password, isAdmin } = req.body;
 
-    // Convert boolean isAdmin to role_id (4 for admin, 1 for resident)
+    //convert boolean isAdmin to role_id (4 for admin, 1 for resident)
     const roleId = isAdmin ? 4 : 1;
 
     const userId = await auth.registerUser(name, password, roleId);
@@ -104,7 +104,7 @@ app.post("/users", async (req, res) => {
   }
 });
 
-// Get all users route (for admin purposes)
+//get all users route (for admin purposes)
 app.get("/users", async (req, res) => {
   try {
     const users = await db.query(`
@@ -113,7 +113,7 @@ app.get("/users", async (req, res) => {
       JOIN roles r ON u.role_id = r.role_id
     `);
 
-    // Remove sensitive information like password_hash
+    //remove sensitive information like password_hash
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -121,13 +121,13 @@ app.get("/users", async (req, res) => {
   }
 });
 
-// Update user route
+//update user route
 app.put("/users/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { username, email, roleId } = req.body;
 
-    // Validate role ID
+    //validate role ID
     const roleCheck = await db.query(
       "SELECT role_id FROM roles WHERE role_id = ?",
       [roleId]
@@ -136,7 +136,7 @@ app.put("/users/:userId", async (req, res) => {
       return res.status(400).json({ error: "Invalid role ID" });
     }
 
-    // Update user
+    //update user
     const sql = `
       UPDATE users 
       SET username = ?, email = ?, role_id = ?
@@ -152,12 +152,12 @@ app.put("/users/:userId", async (req, res) => {
   }
 });
 
-// Delete user route
+//delete user route
 app.delete("/users/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Check if user exists
+    //check if user exists
     const userCheck = await db.query(
       "SELECT user_id FROM users WHERE user_id = ?",
       [userId]
@@ -166,7 +166,7 @@ app.delete("/users/:userId", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Delete user
+    //delete user
     await db.query("DELETE FROM users WHERE user_id = ?", [userId]);
 
     res.json({ message: "User deleted successfully" });
@@ -176,7 +176,7 @@ app.delete("/users/:userId", async (req, res) => {
   }
 });
 
-// Room routes
+//room routes
 app.get("/api/rooms", async (req, res) => {
   try {
     const rooms = await db.query("SELECT * FROM rooms");
@@ -187,7 +187,7 @@ app.get("/api/rooms", async (req, res) => {
   }
 });
 
-// Create a new room
+//create a new room
 app.post("/api/rooms", async (req, res) => {
   try {
     const { roomNumber, description } = req.body;
@@ -205,7 +205,7 @@ app.post("/api/rooms", async (req, res) => {
   }
 });
 
-// Device management routes
+//device management routes
 app.get("/api/rooms/:roomId/devices", async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -279,7 +279,7 @@ app.get("/api/devices/:deviceId/history", async (req, res) => {
   }
 });
 
-// Energy monitoring routes
+//energy monitoring routes
 app.get("/api/rooms/:roomId/energy", async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -328,7 +328,7 @@ app.get("/api/rooms/:roomId/energy/by-device-type", async (req, res) => {
   }
 });
 
-// User-Room Assignment Routes
+//user-room assignment routes
 app.get("/api/user-room-assignments", async (req, res) => {
   try {
     const assignments = await userRoomService.getAllAssignments();
@@ -397,7 +397,7 @@ app.delete("/api/users/:userId/room", async (req, res) => {
   }
 });
 
-// Testing/development routes - these would be removed in production
+//testing/development routes
 app.post("/api/test/rooms/:roomId/devices", async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -434,7 +434,7 @@ app.post(
   }
 );
 
-// Serve HTML pages
+//serve HTML pages
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "loginpage.html"));
 });
@@ -452,7 +452,7 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "admin.html"));
 });
 
-// Get current logged in user
+//get current logged in user
 app.get("/api/users/current", async (req, res) => {
   try {
     if (!req.session.userId) {
@@ -479,7 +479,7 @@ app.get("/api/users/current", async (req, res) => {
   }
 });
 
-// Get all rooms with their users
+//get all rooms with their users
 app.get("/api/rooms/with-users", async (req, res) => {
   try {
     const roomsWithUsers = await userRoomService.getRoomsWithUsers();
@@ -489,13 +489,13 @@ app.get("/api/rooms/with-users", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-// Leaderboard route to get energy usage rankings
+//leaderboard route to get energy usage rankings
 app.get("/api/energy/leaderboard", async (req, res) => {
   try {
-    // Get the period from query (default to day)
+    //get the period from query (default to day)
     const period = req.query.period || "day";
 
-    // SQL to get leaderboard with user details and total energy usage
+    //sql to get leaderboard with user details and total energy usage
     const sql = `
       SELECT 
         u.user_id,
@@ -532,14 +532,14 @@ app.get("/api/energy/leaderboard", async (req, res) => {
 
     const leaderboard = await db.query(sql);
 
-    // Transform results to anonymize if needed
+    //transform results to anonymize if needed
     const anonymizedLeaderboard = leaderboard.map((entry) => ({
       rank: entry.energy_rank,
       username: entry.username,
       firstName: entry.first_name,
       roomNumber: entry.room_number,
       totalEnergy: parseFloat(entry.total_energy),
-      anonymous: false, // Can be used to hide identifying info if needed
+      anonymous: false, //can be used to hide identifying info if needed
     }));
 
     res.json(anonymizedLeaderboard);
@@ -558,10 +558,10 @@ app.post("/users/:userId/reset-password", async (req, res) => {
     const { userId } = req.params;
     const { password } = req.body;
 
-    // Hash the new password
+    //hash the new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update the user's password
+    //update the user's password
     const sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
     await db.query(sql, [hashedPassword, userId]);
 
@@ -572,7 +572,7 @@ app.post("/users/:userId/reset-password", async (req, res) => {
   }
 });
 
-// Alert routes
+//alert routes
 app.post("/api/alerts", async (req, res) => {
   try {
     const { roomId, alertType, message } = req.body;
@@ -586,7 +586,7 @@ app.post("/api/alerts", async (req, res) => {
       session: req.session,
     });
 
-    // Validate room exists
+    //validate room exists
     const room = await db.query("SELECT * FROM rooms WHERE room_id = ?", [
       roomId,
     ]);
@@ -595,7 +595,7 @@ app.post("/api/alerts", async (req, res) => {
       return res.status(404).json({ error: "Room not found" });
     }
 
-    // Create alert with user_id and status as 'active'
+    //create alert with user_id and status as 'active'
     const result = await db.query(
       "INSERT INTO alerts (room_id, user_id, alert_type, message, status) VALUES (?, ?, ?, ?, 'active')",
       [roomId, userId, alertType, message]
@@ -603,7 +603,7 @@ app.post("/api/alerts", async (req, res) => {
 
     console.log("Alert created successfully:", result);
 
-    // Verify the alert was created
+    //verify the alert was created
     const createdAlert = await db.query(
       "SELECT * FROM alerts WHERE alert_id = ?",
       [result.insertId]
@@ -625,7 +625,7 @@ app.get("/api/alerts", async (req, res) => {
     console.log("Fetching all pending alerts...");
     console.log("Session state:", req.session);
 
-    // Get all active alerts with room and user information
+    //get all active alerts with room and user information
     const alerts = await db.query(`
       SELECT 
         a.*,
@@ -664,10 +664,10 @@ app.put("/api/alerts/:alertId/resolve", async (req, res) => {
   }
 });
 
-// Update existing alerts to have correct status
+//update existing alerts to have correct status
 app.put("/api/alerts/update-status", async (req, res) => {
   try {
-    // Update all active alerts to pending
+    //update all active alerts to pending
     await db.query(
       "UPDATE alerts SET status = 'pending' WHERE status = 'active'"
     );
@@ -678,7 +678,7 @@ app.put("/api/alerts/update-status", async (req, res) => {
   }
 });
 
-// Start the server
+//start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

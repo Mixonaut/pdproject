@@ -1,4 +1,4 @@
-// apiClient.js - Frontend API client for smart home system
+//apiClient.js - frontend API client for smart home system
 
 /**
  * Smart Home API Client
@@ -72,7 +72,7 @@ const smartHomeApi = {
     /**
      * Add a new device to a room
      * @param {number} roomId - Room ID
-     * @param {string} deviceType - Device type (light, blind, thermostat, other)
+     * @param {string} deviceType - Device type
      * @param {string} deviceName - Device name
      * @returns {Promise<Object>} Created device info
      */
@@ -97,7 +97,7 @@ const smartHomeApi = {
     /**
      * Update device status
      * @param {number} deviceId - Device ID
-     * @param {string} status - New status (e.g., 'on', 'off')
+     * @param {string} status - New status
      * @returns {Promise<Object>} Response message
      */
     updateStatus: async function (deviceId, status) {
@@ -425,7 +425,7 @@ const smartHomeApi = {
     /**
      * Create a new alert
      * @param {number} roomId - Room ID
-     * @param {string} alertType - Type of alert (e.g., 'fall', 'temperature', 'device')
+     * @param {string} alertType - Type of alert
      * @param {string} message - Alert message
      * @returns {Promise<Object>} Created alert info
      */

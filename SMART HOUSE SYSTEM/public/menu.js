@@ -161,7 +161,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!button || !message) return;
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
+      // Special handling for fall alert
+      if (buttonId === "fallAlertButton") {
+        try {
+          if (!AppState.currentUser || !AppState.currentRoom) {
+            Utils.showError("Please log in to use this feature");
+            return;
+          }
+
+          // Create the fall alert
+          await smartHomeApi.alerts.create(
+            AppState.currentRoom.room_id,
+            "fall",
+            `Fall detected in Room ${AppState.currentRoom.room_number}. Resident: ${AppState.currentUser.username}`
+          );
+        } catch (error) {
+          console.error("Error creating fall alert:", error);
+          Utils.showError("Failed to send fall alert. Please try again.");
+          return;
+        }
+      }
+
+      // Show the confirmation message
       message.style.display = "block";
       message.classList.add("show");
 
@@ -183,39 +205,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAlertButton("fallAlertButton", "fallAlertMessage");
   setupAlertButton("itHelpButton", "itHelpmsg");
   // Setup logout functionality
-const btnLogout = document.getElementById("btnLogout");
-const logoutConfirmModal = document.getElementById("logoutConfirmModal");
-const confirmLogout = document.getElementById("confirmLogout");
+  const btnLogout = document.getElementById("btnLogout");
+  const logoutConfirmModal = document.getElementById("logoutConfirmModal");
+  const confirmLogout = document.getElementById("confirmLogout");
 
-if (btnLogout) {
-  btnLogout.addEventListener("click", function() {
-    // Show the confirmation modal
-    const modal = new bootstrap.Modal(logoutConfirmModal);
-    modal.show();
-  });
-}
+  if (btnLogout) {
+    btnLogout.addEventListener("click", function () {
+      // Show the confirmation modal
+      const modal = new bootstrap.Modal(logoutConfirmModal);
+      modal.show();
+    });
+  }
 
-if (confirmLogout) {
-  confirmLogout.addEventListener("click", async function() {
-    try {
-      // Hide the modal
-      const modal = bootstrap.Modal.getInstance(logoutConfirmModal);
-      if (modal) modal.hide();
-      
-      // Clear application state
-      AppState.reset();
-      
-      // Clear any session cookies by making a GET request to a logout endpoint
-      // Note: You might need to implement this endpoint on your server
-      
-      // Redirect to login page
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Error during logout:", error);
-      Utils.showError("Error logging out. Please try again.");
-    }
-  });
-}
+  if (confirmLogout) {
+    confirmLogout.addEventListener("click", async function () {
+      try {
+        // Hide the modal
+        const modal = bootstrap.Modal.getInstance(logoutConfirmModal);
+        if (modal) modal.hide();
+
+        // Clear application state
+        AppState.reset();
+
+        // Clear any session cookies by making a GET request to a logout endpoint
+        // Note: You might need to implement this endpoint on your server
+
+        // Redirect to login page
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Error during logout:", error);
+        Utils.showError("Error logging out. Please try again.");
+      }
+    });
+  }
   // Initialize energy panel handling properly
   const energyButton = document.querySelector(
     ".big-button[data-bs-target='#energyModal']"

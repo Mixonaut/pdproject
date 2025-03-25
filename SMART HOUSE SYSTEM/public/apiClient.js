@@ -261,14 +261,14 @@ const smartHomeApi = {
     getCurrentUser: async function () {
       try {
         const response = await fetch("/api/users/current");
-        
+
         // Handle unauthorized properly
         if (response.status === 401) {
           console.log("User not authenticated, redirecting to login");
           window.location.href = "/login";
           return null;
         }
-        
+
         if (!response.ok) throw new Error("Failed to fetch current user");
         return await response.json();
       } catch (error) {
@@ -419,6 +419,70 @@ const smartHomeApi = {
   },
 
   /**
+   * Alert related API methods
+   */
+  alerts: {
+    /**
+     * Create a new alert
+     * @param {number} roomId - Room ID
+     * @param {string} alertType - Type of alert (e.g., 'fall', 'temperature', 'device')
+     * @param {string} message - Alert message
+     * @returns {Promise<Object>} Created alert info
+     */
+    create: async function (roomId, alertType, message) {
+      try {
+        const response = await fetch("/api/alerts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ roomId, alertType, message }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create alert");
+        return await response.json();
+      } catch (error) {
+        console.error("Error creating alert:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * Get all pending alerts
+     * @returns {Promise<Array>} Array of pending alerts
+     */
+    getAll: async function () {
+      try {
+        const response = await fetch("/api/alerts");
+        if (!response.ok) throw new Error("Failed to fetch alerts");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+        return [];
+      }
+    },
+
+    /**
+     * Resolve an alert
+     * @param {number} alertId - Alert ID
+     * @returns {Promise<Object>} Response message
+     */
+    resolve: async function (alertId) {
+      try {
+        const response = await fetch(`/api/alerts/${alertId}/resolve`, {
+          method: "PUT",
+        });
+
+        if (!response.ok) throw new Error("Failed to resolve alert");
+        return await response.json();
+      } catch (error) {
+        console.error(`Error resolving alert ${alertId}:`, error);
+        throw error;
+      }
+    },
+  },
+
+  /**
    * Testing methods - only for development
    */
   test: {
@@ -478,20 +542,22 @@ const smartHomeApi = {
        * @param {string} period - Time period ('day', 'month', 'year')
        * @returns {Promise<Array>} Leaderboard data
        */
-      get: async function (period = 'day') {
+      get: async function (period = "day") {
         try {
-          const response = await fetch(`/api/energy/leaderboard?period=${period}`);
-          
+          const response = await fetch(
+            `/api/energy/leaderboard?period=${period}`
+          );
+
           if (!response.ok) {
             throw new Error("Failed to fetch leaderboard");
           }
-          
+
           return await response.json();
         } catch (error) {
           console.error("Error fetching leaderboard:", error);
           throw error;
         }
-      }
+      },
     },
   },
 };

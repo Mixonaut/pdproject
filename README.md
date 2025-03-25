@@ -37,6 +37,13 @@ npm start
 
 2. The application will be available at `http://localhost:3000`
 
+### Poplating Rooms with Data
+
+1. You can populate the rooms with mock data by running:
+   python sensor_simulator.py --duration 60 --interval 30
+
+This will run a simulator to fill energy usage stats
+
 ## Project Structure
 
 ```

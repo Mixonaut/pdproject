@@ -1,7 +1,7 @@
 // db.js - Database connection handler
 const mysql = require("mysql2/promise");
 
-// Create a connection pool for better performance
+//create a connection pool for better performance
 const pool = mysql.createPool({
   host: "132.145.18.222",
   user: "nm2064",
@@ -12,7 +12,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Test database connection
+//test database connection
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
@@ -25,7 +25,7 @@ async function testConnection() {
   }
 }
 
-// Execute database queries
+//execute database queries
 async function query(sql, params) {
   try {
     const [results] = await pool.execute(sql, params);

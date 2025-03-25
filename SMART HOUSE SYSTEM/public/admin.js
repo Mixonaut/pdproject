@@ -148,17 +148,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // restore last active section or default to analytics
+  //restore last section or default
   const lastActiveSection =
     localStorage.getItem("activeSection") || "analytics";
   showSection(lastActiveSection);
 
-  // if we're coming back to users section, load the list
+  //load list of users
   if (lastActiveSection === "users") {
     fetchUsers();
   }
 
-  // Set up event listeners for saving selections
+  //event listeners for saving selections
   if (dayInput) {
     dayInput.addEventListener("change", function () {
       localStorage.setItem("selectedDay", this.value);
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Set up export buttons
+  //export buttons
   const exportChartBtn = document.getElementById("exportChart");
   const exportCSVBtn = document.getElementById("exportCSV");
   const viewAlertsBtn = document.getElementById("viewAlerts");
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Add retry function
+  //retry function
   function retryRefresh() {
     const btnRefreshUsers = document.getElementById("btnRefreshUsers");
     if (btnRefreshUsers) {
@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
  * SECTION TOGGLING
  *******************************************/
 
-// Add cache management variables at the top level
+//cache management variables
 let userCache = {
   data: null,
   version: null,
@@ -252,19 +252,19 @@ let userCache = {
   isFetching: false,
 };
 
-// Add cache management functions
+//cache management functions
 async function getCachedUsers() {
   // If we're already fetching, return the cached data if available
   if (userCache.isFetching) {
     if (userCache.data) {
       return userCache.data;
     }
-    // Wait for the ongoing fetch to complete
+    //wait for ongoing fetch to complete
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return userCache.data;
   }
 
-  // If we have cached data and it's less than 5 minutes old, use it
+  //if we have cached data and it's less than 5 minutes old, use it
   if (
     userCache.data &&
     userCache.lastFetch &&
@@ -273,7 +273,7 @@ async function getCachedUsers() {
     return userCache.data;
   }
 
-  // Otherwise, fetch fresh data
+  //otherwise, fetch fresh data
   return await fetchUsersWithCache();
 }
 
@@ -289,7 +289,7 @@ async function fetchUsersWithCache() {
     throw new Error("User section not found");
   }
 
-  // Ensure table container exists
+  //ensure table container exists
   let tableContainer = userSection.querySelector(".table-responsive");
   if (!tableContainer) {
     tableContainer = document.createElement("div");
@@ -298,7 +298,7 @@ async function fetchUsersWithCache() {
   }
 
   try {
-    // Show loading state
+    //show loading state
     tableContainer.innerHTML = `
       <div class="text-center my-3">
         <div class="spinner-border text-primary" role="status">
@@ -307,7 +307,7 @@ async function fetchUsersWithCache() {
       </div>
     `;
 
-    // Get the base user list with retry logic
+    //get base user list with retry logic
     let retryCount = 0;
     const maxRetries = 3;
     let allUsersData;
@@ -327,7 +327,7 @@ async function fetchUsersWithCache() {
       }
     }
 
-    // Fetch room assignments in parallel
+    //fetch room assignments in parallel
     const roomPromises = allUsersData.map(async (user) => {
       if (user.role_name === "resident") {
         try {
@@ -352,7 +352,7 @@ async function fetchUsersWithCache() {
 
     const roomResults = await Promise.all(roomPromises);
 
-    // Update user room assignments
+    //update user room assignments
     roomResults.forEach((result) => {
       const user = allUsersData.find((u) => u.user_id === result.userId);
       if (user) {
@@ -360,12 +360,12 @@ async function fetchUsersWithCache() {
       }
     });
 
-    // Update cache
+    //update cache
     userCache.data = allUsersData;
     userCache.lastFetch = Date.now();
     userCache.version = Date.now().toString();
 
-    // Update the display
+    //update the display
     allUsers = allUsersData;
     applyFilters();
 
@@ -383,15 +383,15 @@ function showSection(section) {
   const sectionRooms = document.getElementById("sectionRooms");
   const sectionUsers = document.getElementById("sectionUsers");
 
-  // Store the active section
+  //store the active section
   localStorage.setItem("activeSection", section);
 
-  // Hide all sections
+  //hide all sections
   sectionAnalytics.classList.add("d-none");
   sectionRooms.classList.add("d-none");
   sectionUsers.classList.add("d-none");
 
-  // Show the requested section
+  //show the requested section
   if (section === "analytics") {
     sectionAnalytics.classList.remove("d-none");
     const savedPeriod = localStorage.getItem("selectedPeriod") || "day";
@@ -402,12 +402,12 @@ function showSection(section) {
   } else if (section === "users") {
     sectionUsers.classList.remove("d-none");
 
-    // Reset the user section state
+    //reset the user section state
     allUsers = [];
     filteredUsers = [];
     currentPage = 1;
 
-    // Initialize the table container with loading state
+    //initialize the table container with loading state
     const tableContainer = sectionUsers.querySelector(".table-responsive");
     if (tableContainer) {
       tableContainer.innerHTML = `
@@ -419,7 +419,7 @@ function showSection(section) {
       `;
     }
 
-    // Reset filters to default values
+    //reset filters to default values
     const filterUsername = document.getElementById("filterUsername");
     const filterRole = document.getElementById("filterRole");
     const filterRoom = document.getElementById("filterRoom");
@@ -428,7 +428,7 @@ function showSection(section) {
     if (filterRole) filterRole.value = "";
     if (filterRoom) filterRoom.value = "";
 
-    // Use cached data
+    //use cached data
     getCachedUsers().catch((error) => {
       console.error("Error loading cached users:", error);
       const tableContainer = sectionUsers.querySelector(".table-responsive");
@@ -445,7 +445,7 @@ function showSection(section) {
     });
   }
 
-  // Close the offcanvas sidebar
+  //close the offcanvas sidebar
   const offcanvasElement = document.getElementById("sidebarMenu");
   if (offcanvasElement) {
     const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasElement);
@@ -467,9 +467,9 @@ function showSection(section) {
  *******************************************/
 
 let energyChart;
-let currentPeriod = "day"; // Track the current time period
+let currentPeriod = "day"; //track the current time period
 
-// Define colors for different room datasets (randomly assigned)
+//define colors for different room datasets (randomly assigned)
 const colors = [
   "rgba(75,192,192,1)",
   "rgba(255,99,132,1)",
@@ -497,7 +497,7 @@ function initEnergyChart() {
   });
 }
 
-// Used to select rooms for filtering chart data
+//used to select rooms for filtering chart data
 function getSelectedRoomsFromDropdown() {
   const roomsSelect = document.getElementById("roomsSelect");
   if (!roomsSelect) return [];
@@ -507,28 +507,28 @@ function getSelectedRoomsFromDropdown() {
     (button) => button.value
   );
 
-  // If "All" is selected, return all rooms
+  //if "All" is selected, return all rooms
   if (selectedRooms.includes("All")) {
     return rooms_global;
   }
   return selectedRooms.length ? selectedRooms : [];
 }
 
-// Generate labels based on the current period
+//generate labels based on the current period
 function generateLabels(period) {
   if (period === "day") {
     return Array.from({ length: 24 }, (_, i) => `${i}:00`);
   } else if (period === "month") {
-    // Get the selected month and year from the dropdowns
+    //get the selected month and year from the dropdowns
     const monthSelect = document.getElementById("monthSelect");
     const yearSelect = document.getElementById("yearSelect");
     const selectedMonth = parseInt(monthSelect.value) - 1; // Convert to 0-based month
     const selectedYear = parseInt(yearSelect.value);
 
-    // Get the number of days in the selected month
+    //get the number of days in the selected month
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
-    // Generate array with correct number of days
+    //generate array with correct number of days
     return Array.from({ length: daysInMonth }, (_, i) => `Day ${i + 1}`);
   } else {
     return [
@@ -548,7 +548,7 @@ function generateLabels(period) {
   }
 }
 
-// Set chart data based on current selections
+//set chart data based on current selections
 async function setChartData(period) {
   try {
     const selectedRooms = getSelectedRoomsFromDropdown();
@@ -557,32 +557,32 @@ async function setChartData(period) {
       return;
     }
 
-    // Get filter values based on the current period
+    //get filter values based on the current period
     let filterDate;
     if (period === "day") {
       filterDate = document.getElementById("dayInput").value;
     }
 
-    // Show loading indicator
+    //show loading indicator
     document.getElementById("chartLoading").classList.remove("d-none");
 
-    // Prepare data structure for the chart
+    //prepare data structure for the chart
     const labels = generateLabels(period);
     const datasets = [];
     let totalData = Array(labels.length).fill(0);
 
-    // Fetch data for each selected room
+    //fetch data for each selected room
     for (let i = 0; i < selectedRooms.length; i++) {
       const roomId = selectedRooms[i];
       try {
-        // Use the API client to fetch energy data
+        //use the API client to fetch energy data
         const roomData = await smartHomeApi.energy.getUsage(
           roomId,
           period,
           filterDate
         );
 
-        // Process the data to match chart format
+        //process the data to match chart format
         const processedData = Array(labels.length).fill(0);
 
         roomData.forEach((item) => {
@@ -590,9 +590,9 @@ async function setChartData(period) {
           if (period === "day") {
             index = item.hour || 0;
           } else if (period === "month") {
-            index = (item.day || 1) - 1; // Days are 1-indexed
+            index = (item.day || 1) - 1; //days are 1-indexed
           } else if (period === "year") {
-            index = (item.month || 1) - 1; // Months are 1-indexed
+            index = (item.month || 1) - 1; //months are 1-indexed
           }
 
           if (index >= 0 && index < processedData.length) {
@@ -601,7 +601,7 @@ async function setChartData(period) {
           }
         });
 
-        // Add dataset for this room
+        //add dataset for this room
         datasets.push({
           label: `Room ${roomId}`,
           data: processedData,
@@ -614,7 +614,7 @@ async function setChartData(period) {
       }
     }
 
-    // Add total dataset
+    //add total dataset
     datasets.push({
       label: "Total",
       data: totalData,
@@ -624,7 +624,7 @@ async function setChartData(period) {
       fill: false,
     });
 
-    // Update the chart
+    //update the chart
     const newType = period === "day" ? "line" : "bar";
 
     if (!energyChart || energyChart.config.type !== newType) {
@@ -647,16 +647,16 @@ async function setChartData(period) {
     energyChart.data.datasets = datasets;
     energyChart.update();
 
-    // Update statistics
+    //update statistics
     const totalEnergy = totalData.reduce((sum, val) => sum + val, 0);
     document.getElementById("energyUsage").textContent = `${totalEnergy.toFixed(
       2
     )} kWh`;
 
-    // Update device status count (needs to be implemented with device API)
+    //update device status count (needs to be implemented with device API)
     updateDeviceStatusCount(selectedRooms);
 
-    // Hide loading indicator
+    //hide loading indicator
     document.getElementById("chartLoading").classList.add("d-none");
   } catch (error) {
     console.error("Error setting chart data:", error);
@@ -664,7 +664,7 @@ async function setChartData(period) {
   }
 }
 
-// Update the device status count
+//update the device status count
 async function updateDeviceStatusCount(roomIds) {
   try {
     let activeCount = 0;
@@ -674,7 +674,7 @@ async function updateDeviceStatusCount(roomIds) {
       const devices = await smartHomeApi.devices.getByRoom(roomId);
       totalCount += devices.length;
 
-      // Count active devices
+      //count active devices
       for (const device of devices) {
         if (device.status === "on") {
           activeCount++;
@@ -697,10 +697,10 @@ async function updateDeviceStatusCount(roomIds) {
 
 let rooms_global = [];
 
-// Fetch and populate rooms
+//fetch and populate rooms
 async function fetchAndPopulateRooms() {
   try {
-    // Show loading indicator
+    //show loading indicator
     const loadingIndicator = document.createElement("div");
     loadingIndicator.id = "roomsLoading";
     loadingIndicator.className = "text-center my-3";
@@ -712,36 +712,36 @@ async function fetchAndPopulateRooms() {
       roomsSelect.appendChild(loadingIndicator);
     }
 
-    // Fetch rooms from API
+    //fetch rooms from API
     const rooms = await smartHomeApi.rooms.getAll();
 
     if (rooms.length > 0) {
       rooms_global = rooms.map((room) => room.room_id);
 
-      // Remove loading indicator
+      //remove loading indicator
       const loadingElement = document.getElementById("roomsLoading");
       if (loadingElement) {
         loadingElement.remove();
       }
 
-      // Populate room selection
+      //populate room selection
       populateRooms(rooms);
 
-      // Also populate room grid
+      //also populate room grid
       populateRoomGrid(rooms);
     } else {
       console.log("No rooms found, generating test data");
 
-      // If no rooms exist, create a test room
+      //if no rooms exist, create a test room
       try {
         const newRoom = await smartHomeApi.rooms.create("101", "Test Room");
         console.log("Test room created:", newRoom);
 
-        // Add test devices to the room
+        //add test devices to the room
         const roomId = newRoom.roomId;
         await smartHomeApi.test.createDevices(roomId);
 
-        // Refresh rooms
+        //refresh rooms
         fetchAndPopulateRooms();
       } catch (error) {
         console.error("Error creating test room:", error);
@@ -752,20 +752,20 @@ async function fetchAndPopulateRooms() {
   } catch (error) {
     console.error("Error fetching rooms:", error);
 
-    // Remove loading indicator
+    //remove loading indicator
     const loadingElement = document.getElementById("roomsLoading");
     if (loadingElement) {
       loadingElement.remove();
     }
 
-    // Fallback
+    //fallback
     const mockRooms = ["101", "102", "103", "104", "105"];
     rooms_global = mockRooms;
     populateRoomsMock(mockRooms);
   }
 }
 
-// Modify setupRoomFilterEvents to save room selections
+//modify setupRoomFilterEvents to save room selections
 function setupRoomFilterEvents() {
   const roomsSelect = document.getElementById("roomsSelect");
   if (roomsSelect) {
@@ -784,7 +784,7 @@ function setupRoomFilterEvents() {
             allButton.classList.remove("selected");
           }
         } else {
-          // If "All" is selected, deselect other rooms
+          //if "All" is selected, deselect other rooms
           roomsSelect.querySelectorAll(".roomLabel").forEach((btn) => {
             if (btn !== button) {
               btn.classList.remove("selected");
@@ -794,20 +794,20 @@ function setupRoomFilterEvents() {
         button.classList.add("selected");
       }
 
-      // Save room selections to localStorage
+      //save room selections to localStorage
       const selectedButtons = roomsSelect.querySelectorAll(
         ".roomLabel.selected"
       );
       const selectedRooms = Array.from(selectedButtons).map((btn) => btn.value);
       localStorage.setItem("selectedRooms", JSON.stringify(selectedRooms));
 
-      // Update chart with selected rooms
+      //update chart with selected rooms
       setChartData(currentPeriod);
     });
   }
 }
 
-// Populate rooms in the filter dropdown
+//populate rooms in the filter dropdown
 function populateRooms(rooms) {
   const roomsSelect = document.getElementById("roomsSelect");
   if (!roomsSelect) return;
@@ -823,11 +823,11 @@ function populateRooms(rooms) {
     roomsSelect.appendChild(option);
   });
 
-  // Set up room filter events after populating rooms
+  //set up room filter events after populating rooms
   setupRoomFilterEvents();
 }
 
-// Fallback for populating rooms when API fails
+//fallback for populating rooms when API fails
 function populateRoomsMock(rooms) {
   const roomsSelect = document.getElementById("roomsSelect");
   if (!roomsSelect) return;
@@ -843,11 +843,11 @@ function populateRoomsMock(rooms) {
     roomsSelect.appendChild(option);
   });
 
-  // Set up room filter events after populating mock rooms
+  //set up room filter events after populating mock rooms
   setupRoomFilterEvents();
 }
 
-// Populate the room grid in the Rooms section
+//populate the room grid in the Rooms section
 function populateRoomGrid(rooms) {
   const roomGrid = document.querySelector(".room-grid");
   if (!roomGrid) return;
@@ -860,14 +860,14 @@ function populateRoomGrid(rooms) {
     roomButton.textContent = `Room ${room.room_number}`;
     roomButton.dataset.roomId = room.room_id;
 
-    // Add click handler to view room details
+    //add click handler to view room details
     roomButton.addEventListener("click", () => viewRoomDetails(room.room_id));
 
     roomGrid.appendChild(roomButton);
   });
 }
 
-// Refresh room grid data
+//refresh room grid data
 async function refreshRoomGrid() {
   try {
     const rooms = await smartHomeApi.rooms.getAll();
@@ -877,10 +877,10 @@ async function refreshRoomGrid() {
   }
 }
 
-// View details for a specific room
+//view details for a specific room
 async function viewRoomDetails(roomId) {
   try {
-    // Create and show the modal first with loading state
+    //create and show the modal first with loading state
     const modalHTML = `
       <div class="modal fade" id="roomDetailModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -902,18 +902,18 @@ async function viewRoomDetails(roomId) {
       </div>
     `;
 
-    // Add the modal to the document
+    //add the modal to the document
     const modalContainer = document.createElement("div");
     modalContainer.innerHTML = modalHTML;
     document.body.appendChild(modalContainer);
 
-    // Show the modal
+    //show the modal
     const modal = new bootstrap.Modal(
       document.getElementById("roomDetailModal")
     );
     modal.show();
 
-    // Fetch data
+    //fetch data
     const [devices, users] = await Promise.all([
       smartHomeApi.devices.getByRoom(roomId),
       smartHomeApi.userRooms.getUsersByRoom(roomId),
@@ -932,7 +932,7 @@ async function viewRoomDetails(roomId) {
     });
     const deduplicatedDevices = Array.from(uniqueDevices.values());
 
-    // Update modal content with the fetched data
+    //update modal content with the fetched data
     const modalBody = document.querySelector("#roomDetailModal .modal-body");
     modalBody.innerHTML = `
       <!-- Residents Tab -->
@@ -1023,7 +1023,7 @@ async function viewRoomDetails(roomId) {
       </div>
     `;
 
-    // Add event listeners to toggle buttons
+    //add event listeners to toggle buttons
     document.querySelectorAll(".toggle-device").forEach((button) => {
       button.addEventListener("click", async function () {
         const deviceId = this.dataset.deviceId;
@@ -1031,15 +1031,15 @@ async function viewRoomDetails(roomId) {
         const newStatus = currentStatus === "on" ? "off" : "on";
 
         try {
-          // Show loading spinner on the button
+          //show loading spinner on the button
           this.innerHTML =
             '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
           this.disabled = true;
 
-          // Update the device status via API
+          //update the device status via API
           await smartHomeApi.devices.updateStatus(deviceId, newStatus);
 
-          // Update the button and status cell
+          //update the button and status cell
           this.dataset.currentStatus = newStatus;
           this.innerHTML = "Toggle";
           this.disabled = false;
@@ -1048,7 +1048,7 @@ async function viewRoomDetails(roomId) {
             this.closest("tr").querySelector("td:nth-child(3)");
           statusCell.textContent = newStatus;
 
-          // Update the timestamp
+          //update the timestamp
           const timestampCell =
             this.closest("tr").querySelector("td:nth-child(4)");
           timestampCell.textContent = new Date().toLocaleString();
@@ -1061,7 +1061,7 @@ async function viewRoomDetails(roomId) {
       });
     });
 
-    // Add event listeners to remove buttons
+    //add event listeners to remove buttons
     document.querySelectorAll(".remove-device").forEach((button) => {
       button.addEventListener("click", async function () {
         const deviceId = this.dataset.deviceId;
@@ -1073,15 +1073,15 @@ async function viewRoomDetails(roomId) {
           )
         ) {
           try {
-            // Show loading spinner on the button
+            //show loading spinner on the button
             this.innerHTML =
               '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Removing...';
             this.disabled = true;
 
-            // Remove the device via API
+            //remove the device via API
             await smartHomeApi.devices.remove(deviceId);
 
-            // Remove the row from the table
+            //remove the row from the table
             this.closest("tr").remove();
           } catch (error) {
             console.error("Error removing device:", error);
@@ -1093,19 +1093,19 @@ async function viewRoomDetails(roomId) {
       });
     });
 
-    // Add device button handler
+    //add device button handler
     document.getElementById("addDeviceBtn").addEventListener("click", () => {
       showAddDeviceForm(roomId, modal);
     });
 
-    // Assign resident button handler
+    //assign resident button handler
     document
       .getElementById("assignResidentBtn")
       .addEventListener("click", () => {
         showAssignResidentForm(roomId, modal);
       });
 
-    // Remove the modal from DOM when it's closed
+    //remove the modal from DOM when it's closed
     document
       .getElementById("roomDetailModal")
       .addEventListener("hidden.bs.modal", function () {
@@ -1117,16 +1117,16 @@ async function viewRoomDetails(roomId) {
   }
 }
 
-// Function to update the device list table
+//function to update the device list table
 async function updateDeviceList(roomId) {
   try {
-    // Get the table body
+    //get the table body
     const deviceTableBody = document.querySelector(
       "#roomDetailModal .table tbody"
     );
     if (!deviceTableBody) return;
 
-    // Show loading state
+    //show loading state
     deviceTableBody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center">
@@ -1137,7 +1137,7 @@ async function updateDeviceList(roomId) {
       </tr>
     `;
 
-    // Fetch updated device list
+    //fetch updated device list
     const devices = await smartHomeApi.devices.getByRoom(roomId);
 
     //stop duplicate devicee fetch
@@ -1153,7 +1153,7 @@ async function updateDeviceList(roomId) {
     });
     const deduplicatedDevices = Array.from(uniqueDevices.values());
 
-    // Update the table with new data
+    //update the table with new data
     deviceTableBody.innerHTML = deduplicatedDevices
       .map(
         (device) => `
@@ -1185,7 +1185,7 @@ async function updateDeviceList(roomId) {
       )
       .join("");
 
-    // Re-attach event listeners to the new buttons
+    //reattach event listeners to the new buttons
     deviceTableBody.querySelectorAll(".toggle-device").forEach((button) => {
       button.addEventListener("click", async function () {
         const deviceId = this.dataset.deviceId;
@@ -1251,14 +1251,14 @@ async function updateDeviceList(roomId) {
   }
 }
 
-// Show form to add new device
+//show form to add new device
 function showAddDeviceForm(roomId, parentModal) {
-  // Hide the parent modal
+  //hide the parent modal
   if (parentModal) {
     parentModal.hide();
   }
 
-  // Create and show the add device modal
+  //create and show the add device modal
   const addDeviceHTML = `
     <div class="modal fade" id="addDeviceModal" tabindex="-1">
       <div class="modal-dialog">
@@ -1293,16 +1293,16 @@ function showAddDeviceForm(roomId, parentModal) {
     </div>
   `;
 
-  // Add the modal to the document
+  //add the modal to the document
   const modalContainer = document.createElement("div");
   modalContainer.innerHTML = addDeviceHTML;
   document.body.appendChild(modalContainer);
 
-  // Show the modal
+  //show the modal
   const modal = new bootstrap.Modal(document.getElementById("addDeviceModal"));
   modal.show();
 
-  // Add event listener to submit button
+  //add event listener to submit button
   document
     .getElementById("submitAddDevice")
     .addEventListener("click", async () => {
@@ -1315,56 +1315,56 @@ function showAddDeviceForm(roomId, parentModal) {
       }
 
       try {
-        // Show loading state
+        //show loading state
         const submitBtn = document.getElementById("submitAddDevice");
         submitBtn.innerHTML =
           '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
         submitBtn.disabled = true;
 
-        // Add the device via API
+        //add the device via API
         await smartHomeApi.devices.add(roomId, deviceType, deviceName);
 
-        // Hide the modal
+        //hide the modal
         modal.hide();
 
-        // Show the parent modal again
+        //show the parent modal again
         if (parentModal) {
           parentModal.show();
         }
 
-        // Update the device list
+        //update the device list
         await updateDeviceList(roomId);
       } catch (error) {
         console.error("Error adding device:", error);
         alert("Error adding device. Please try again.");
 
-        // Reset button
+        //reset button
         submitBtn.innerHTML = "Add Device";
         submitBtn.disabled = false;
       }
     });
 
-  // Remove the modal from DOM when it's closed
+  //remove the modal from DOM when it's closed
   document
     .getElementById("addDeviceModal")
     .addEventListener("hidden.bs.modal", function () {
       document.body.removeChild(modalContainer);
 
-      // Reopen the parent modal if it was closed
+      //reopen the parent modal if it was closed
       if (parentModal) {
         parentModal.show();
       }
     });
 }
 
-// Show form to assign a resident to a room
+//show form to assign a resident to a room
 async function showAssignResidentForm(roomId, parentModal) {
-  // Hide the parent modal
+  //hide the parent modal
   if (parentModal) {
     parentModal.hide();
   }
 
-  // Fetch all users with resident role
+  //fetch all users with resident role
   let residents = [];
   try {
     const allUsers = await fetch("/users").then((res) => res.json());
@@ -1374,7 +1374,7 @@ async function showAssignResidentForm(roomId, parentModal) {
     residents = [];
   }
 
-  // Create and show the assign resident modal
+  //create and show the assign resident modal
   const assignResidentHTML = `
     <div class="modal fade" id="assignResidentModal" tabindex="-1">
       <div class="modal-dialog">
@@ -1409,18 +1409,18 @@ async function showAssignResidentForm(roomId, parentModal) {
     </div>
   `;
 
-  // Add the modal to the document
+  //add the modal to the document
   const modalContainer = document.createElement("div");
   modalContainer.innerHTML = assignResidentHTML;
   document.body.appendChild(modalContainer);
 
-  // Show the modal
+  //show the modal
   const modal = new bootstrap.Modal(
     document.getElementById("assignResidentModal")
   );
   modal.show();
 
-  // Add event listener to submit button
+  //add event listener to submit button
   document
     .getElementById("submitAssignResident")
     .addEventListener("click", async () => {
@@ -1432,40 +1432,40 @@ async function showAssignResidentForm(roomId, parentModal) {
       }
 
       try {
-        // Show loading state
+        //show loading state
         const submitBtn = document.getElementById("submitAssignResident");
         submitBtn.innerHTML =
           '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Assigning...';
         submitBtn.disabled = true;
 
-        // Assign the resident to the room via API
+        //assign the resident to the room via API
         await smartHomeApi.userRooms.assignRoom(userId, roomId);
 
-        // Hide the modal
+        //hide the modal
         modal.hide();
 
-        // Show success message
+        //show success message
         alert("Resident assigned to room successfully.");
 
-        // Reopen the room details modal
+        //reopen the room details modal
         viewRoomDetails(roomId);
       } catch (error) {
         console.error("Error assigning resident:", error);
         alert(`Error assigning resident: ${error.message}`);
 
-        // Reset button
+        //reset button
         submitBtn.innerHTML = "Assign to Room";
         submitBtn.disabled = false;
       }
     });
 
-  // Remove the modal from DOM when it's closed
+  //remove the modal from DOM when it's closed
   document
     .getElementById("assignResidentModal")
     .addEventListener("hidden.bs.modal", function () {
       document.body.removeChild(modalContainer);
 
-      // Reopen the parent modal if it was closed
+      //reopen the parent modal if it was closed
       if (parentModal) {
         parentModal.show();
       }
@@ -1476,7 +1476,7 @@ async function showAssignResidentForm(roomId, parentModal) {
  * USER-ROOM ASSIGNMENT MANAGEMENT
  *******************************************/
 
-// Fetch a user's current room assignment
+//fetch a user's current room assignment
 async function getUserRoom(userId) {
   try {
     return await smartHomeApi.userRooms.getUserRoom(userId);
@@ -1489,9 +1489,9 @@ async function getUserRoom(userId) {
 // Enhanced edit user function with room assignment
 async function editUser(userId) {
   try {
-    // Fetch user details
+    //fetch user details
     const users = await smartHomeApi.users.getAll();
-    // Convert userId to number for comparison
+    //convert userId to number for comparison
     const user = users.find((u) => u.user_id === Number(userId));
 
     if (!user) {
@@ -1501,16 +1501,16 @@ async function editUser(userId) {
       return;
     }
 
-    // Fetch available rooms
+    //fetch available rooms
     const rooms = await smartHomeApi.rooms.getAll();
 
-    // Fetch user's current room
+    //fetch user's current room
     const currentRoom = await getUserRoom(userId);
 
-    // Only show room assignment for residents
+    //only show room assignment for residents
     const isResident = user.role_name === "resident";
 
-    // Create and show edit modal
+    //create and show edit modal
     const modalHTML = `
       <div class="modal fade" id="editUserModal" tabindex="-1">
         <div class="modal-dialog">
@@ -1577,16 +1577,16 @@ async function editUser(userId) {
       </div>
     `;
 
-    // Add modal to document
+    //add modal to document
     const modalContainer = document.createElement("div");
     modalContainer.innerHTML = modalHTML;
     document.body.appendChild(modalContainer);
 
-    // Show modal
+    //show modal
     const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
     modal.show();
 
-    // Show/hide room assignment based on role
+    //show/hide room assignment based on role
     document.getElementById("editRole").addEventListener("change", function () {
       const isResident = this.value === "1";
       document
@@ -1594,7 +1594,7 @@ async function editUser(userId) {
         .classList.toggle("d-none", !isResident);
     });
 
-    // Handle save button click
+    //handle save button click
     document
       .getElementById("saveUserEdit")
       .addEventListener("click", async () => {
@@ -1604,7 +1604,7 @@ async function editUser(userId) {
         const roomId = document.getElementById("assignedRoom").value;
 
         try {
-          // Update the user info
+          //update the user info
           const response = await fetch(`/users/${userId}`, {
             method: "PUT",
             headers: {
@@ -1620,15 +1620,15 @@ async function editUser(userId) {
           // If the user is a resident, handle room assignment
           if (roleId === "1") {
             if (roomId) {
-              // Assign the room
+              //assign the room
               await smartHomeApi.userRooms.assignRoom(userId, roomId);
             } else {
-              // Remove assignment if "No Room" was selected
+              //remove assignment if "No Room" was selected
               await smartHomeApi.userRooms.removeAssignment(userId);
             }
           }
 
-          // Close modal and refresh user list
+          //close modal and refresh user list
           modal.hide();
           fetchUsers();
         } catch (error) {
@@ -1637,7 +1637,7 @@ async function editUser(userId) {
         }
       });
 
-    // Remove modal from DOM when closed
+    //remove modal from DOM when closed
     document
       .getElementById("editUserModal")
       .addEventListener("hidden.bs.modal", function () {
@@ -1651,7 +1651,7 @@ async function editUser(userId) {
 
 // Enhanced add user function with room assignment
 function addUser() {
-  // Fetch rooms first
+  //fetch rooms first
   smartHomeApi.rooms
     .getAll()
     .then((rooms) => {
@@ -1710,18 +1710,18 @@ function addUser() {
       </div>
     `;
 
-      // Add modal to document
+      //add modal to document
       const modalContainer = document.createElement("div");
       modalContainer.innerHTML = modalHTML;
       document.body.appendChild(modalContainer);
 
-      // Show modal
+      //show modal
       const modal = new bootstrap.Modal(
         document.getElementById("addUserModal")
       );
       modal.show();
 
-      // Show/hide room assignment based on role
+      //show/hide room assignment based on role
       document
         .getElementById("newRole")
         .addEventListener("change", function () {
@@ -1731,7 +1731,7 @@ function addUser() {
             .classList.toggle("d-none", !isResident);
         });
 
-      // Handle save button click
+      //handle save button click
       document
         .getElementById("saveNewUser")
         .addEventListener("click", async () => {
@@ -1742,7 +1742,7 @@ function addUser() {
           const roomId = document.getElementById("newAssignedRoom").value;
 
           try {
-            // Create user first
+            //create user first
             const response = await fetch("/users", {
               method: "POST",
               headers: {
@@ -1763,12 +1763,12 @@ function addUser() {
             const result = await response.json();
             const userId = result.userId;
 
-            // If the user is a resident and a room was selected, assign it
+            //if the user is a resident and a room was selected, assign it
             if (roleId === "1" && roomId) {
               await smartHomeApi.userRooms.assignRoom(userId, roomId);
             }
 
-            // Close modal and refresh user list
+            //close modal and refresh user list
             modal.hide();
             fetchUsers();
           } catch (error) {
@@ -1777,7 +1777,7 @@ function addUser() {
           }
         });
 
-      // Remove modal from DOM when closed
+      //remove modal from DOM when closed
       document
         .getElementById("addUserModal")
         .addEventListener("hidden.bs.modal", function () {
@@ -1790,7 +1790,7 @@ function addUser() {
     });
 }
 
-// Enhanced delete user function
+//delete user function
 async function deleteUser(userId) {
   if (
     confirm(
@@ -1798,7 +1798,6 @@ async function deleteUser(userId) {
     )
   ) {
     try {
-      // We don't need to worry about the room assignment as it will be deleted cascade
       const response = await fetch(`/users/${userId}`, {
         method: "DELETE",
       });
@@ -1807,7 +1806,7 @@ async function deleteUser(userId) {
         throw new Error("Failed to delete user");
       }
 
-      // Refresh user list
+      //refresh user list
       fetchUsers();
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -1816,11 +1815,11 @@ async function deleteUser(userId) {
   }
 }
 
-// Add a room assignments view to the Rooms section
+//add a room assignments view to the Rooms section
 function showRoomAssignments() {
   const sectionRooms = document.getElementById("sectionRooms");
 
-  // Add loading indicator
+  //add loading indicator
   sectionRooms.innerHTML = `
     <h2 class="mb-4">Resident Room Access</h2>
     <div class="text-center my-3">
@@ -1830,7 +1829,7 @@ function showRoomAssignments() {
     </div>
   `;
 
-  // Fetch room assignments
+  //fetch room assignments
   smartHomeApi.userRooms
     .getRoomsWithUsers()
     .then((rooms) => {
@@ -1880,14 +1879,14 @@ function showRoomAssignments() {
       </div>
     `;
 
-      // Add event listener to view room buttons
+      //add event listener to view room buttons
       document.querySelectorAll(".view-room").forEach((button) => {
         button.addEventListener("click", () =>
           viewRoomDetails(button.dataset.roomId)
         );
       });
 
-      // Add event listener to refresh button
+      //add event listener to refresh button
       document
         .getElementById("refreshRoomsBtn")
         .addEventListener("click", () => {
@@ -1905,20 +1904,20 @@ function showRoomAssignments() {
     });
 }
 
-// Global variables for user management
+//global variables for user management
 let allUsers = [];
 let currentPage = 1;
 const usersPerPage = 10;
 let filteredUsers = [];
 
-// Fetch users for the user management section
+//fetch users for the user management section
 async function fetchUsers() {
   const userSection = document.getElementById("sectionUsers");
   if (!userSection) {
     throw new Error("User section not found");
   }
 
-  // Ensure table container exists
+  //ensure table container exists
   let tableContainer = userSection.querySelector(".table-responsive");
   if (!tableContainer) {
     tableContainer = document.createElement("div");
@@ -1927,7 +1926,7 @@ async function fetchUsers() {
   }
 
   try {
-    // Show loading state
+    //show loading state
     tableContainer.innerHTML = `
       <div class="text-center my-3">
         <div class="spinner-border text-primary" role="status">
@@ -1952,14 +1951,14 @@ async function fetchUsers() {
             `Failed to fetch users after ${maxRetries} attempts: ${error.message}`
           );
         }
-        // Wait before retrying
+        //wait before retrying
         await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
       }
     }
 
     allUsers = allUsersData;
 
-    // Fetch room assignments in parallel for better performance
+    //fetch room assignments
     const roomPromises = allUsers.map(async (user) => {
       if (user.role_name === "resident") {
         try {
@@ -1984,7 +1983,7 @@ async function fetchUsers() {
 
     const roomResults = await Promise.all(roomPromises);
 
-    // Update user room assignments
+    //update user room assignments
     roomResults.forEach((result) => {
       const user = allUsers.find((u) => u.user_id === result.userId);
       if (user) {
@@ -1992,7 +1991,7 @@ async function fetchUsers() {
       }
     });
 
-    // Apply filters and display users
+    //apply filters and display users
     applyFilters();
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -2180,8 +2179,8 @@ function setActivePeriod(period) {
     yearTab.classList.add("active");
   }
 
-  currentPeriod = period; // Update current period
-  localStorage.setItem("selectedPeriod", period); // Save the selected period
+  currentPeriod = period; //update current period
+  localStorage.setItem("selectedPeriod", period); //save the selected period
 
   toggleFilter(period);
   setChartData(period);
@@ -2207,7 +2206,7 @@ function toggleFilter(mode) {
  * EXPORT FUNCTIONS
  *******************************************/
 
-// Export chart as image
+//export chart as image
 function exportChart() {
   if (!energyChart) return;
 
@@ -2224,7 +2223,7 @@ function exportChart() {
   document.body.removeChild(downloadLink);
 }
 
-// Export data as CSV
+//export data as CSV
 function exportCSV() {
   if (!energyChart) return;
 
@@ -2233,14 +2232,14 @@ function exportCSV() {
 
   let csvContent = "data:text/csv;charset=utf-8,";
 
-  // Add header row
+  //add header row
   let headerRow = ["Period"];
   datasets.forEach((dataset) => {
     headerRow.push(dataset.label);
   });
   csvContent += headerRow.join(",") + "\r\n";
 
-  // Add data rows
+  //add data rows
   labels.forEach((label, index) => {
     let row = [label];
     datasets.forEach((dataset) => {
@@ -2249,7 +2248,7 @@ function exportCSV() {
     csvContent += row.join(",") + "\r\n";
   });
 
-  // Create download link
+  //create download link
   const encodedUri = encodeURI(csvContent);
   const downloadLink = document.createElement("a");
   downloadLink.href = encodedUri;
@@ -2265,7 +2264,7 @@ function exportCSV() {
  * ENERGY SUMMARY
  *******************************************/
 
-// Define colors for different device types
+//define colors for different device types
 const deviceTypeColors = {
   light: "rgba(255, 206, 86, 1)", // Yellow
   blind: "rgba(75, 192, 192, 1)", // Teal
@@ -2274,15 +2273,15 @@ const deviceTypeColors = {
   default: "rgba(54, 162, 235, 1)", // Blue
 };
 
-// Global chart instance for device type chart
+//global chart instance for device type chart
 let deviceTypeChart = null;
 
-// Update the energy summary section
+//update the energy summary section
 async function updateEnergySummary() {
   const energySummary = document.getElementById("energySummary");
   if (!energySummary) return;
 
-  // Add loading indicator
+  //add loading indicator
   energySummary.innerHTML = `
     <div class="text-center my-3">
       <div class="spinner-border text-primary" role="status">
@@ -2292,7 +2291,7 @@ async function updateEnergySummary() {
   `;
 
   try {
-    // Get selected rooms
+    //get selected rooms
     const selectedRooms = getSelectedRoomsFromDropdown();
     let roomIds = selectedRooms.length ? selectedRooms : rooms_global;
 
@@ -2306,7 +2305,7 @@ async function updateEnergySummary() {
       return;
     }
 
-    // Prepare container for summary data
+    //prepare container for summary data
     energySummary.innerHTML = `
       <h4>Energy Summary</h4>
       <div class="card mb-3">
@@ -2327,19 +2326,19 @@ async function updateEnergySummary() {
       </div>
     `;
 
-    // Fetch data for each room
+    //fetch data for each room
     let totalEnergy = 0;
     let deviceTypeData = {};
 
     for (const roomId of roomIds) {
       try {
-        // Get summary for this room
+        //get summary for this room
         const summary = await smartHomeApi.energy.getSummary(roomId, "day");
         if (summary && summary.total_energy) {
           totalEnergy += parseFloat(summary.total_energy);
         }
 
-        // Get energy by device type
+        //get energy by device type
         const deviceTypes = await smartHomeApi.energy.getByDeviceType(
           roomId,
           "day"
@@ -2356,11 +2355,11 @@ async function updateEnergySummary() {
       }
     }
 
-    // Get comparison data (combine all rooms)
+    //get comparison data (combine all rooms)
     let percentageChange = 0;
     try {
       if (roomIds.length === 1) {
-        // For single room, get direct comparison
+        //for single room, compare to yesterday
         const comparison = await smartHomeApi.energy.getComparison(
           roomIds[0],
           "day"
@@ -2377,7 +2376,7 @@ async function updateEnergySummary() {
       console.error("Error getting energy comparison:", error);
     }
 
-    // Update the UI with the data
+    //update the UI with the data
     const totalEnergyElement = document.getElementById("totalEnergyToday");
     if (totalEnergyElement) {
       totalEnergyElement.textContent = `${totalEnergy.toFixed(2)} kWh`;
@@ -2391,7 +2390,7 @@ async function updateEnergySummary() {
       comparisonElement.style.color = percentageChange >= 0 ? "red" : "green";
     }
 
-    // Create device type chart
+    //create device type chart
     const deviceTypes = Object.keys(deviceTypeData);
     const deviceUsage = Object.values(deviceTypeData);
 
@@ -2402,13 +2401,13 @@ async function updateEnergySummary() {
         return;
       }
 
-      // Destroy existing chart if it exists
+      //destroy existing chart if it exists
       if (deviceTypeChart) {
         deviceTypeChart.destroy();
       }
 
       try {
-        // Create new chart with improved configuration
+        //create new chart with improved configuration
         deviceTypeChart = new Chart(deviceCtx, {
           type: "doughnut",
           data: {
@@ -2483,21 +2482,21 @@ async function updateEnergySummary() {
  * ALERTS
  *******************************************/
 
-// View alerts
+//view alerts
 async function viewAlerts() {
   try {
-    // Show loading state
+    //show loading state
     const alertsList = document.getElementById("alertsList");
     alertsList.innerHTML =
       '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading alerts...</span></div></div>';
 
-    // Show the modal
+    //show the modal
     const alertsModal = new bootstrap.Modal(
       document.getElementById("alertsModal")
     );
     alertsModal.show();
 
-    // Fetch alerts
+    //fetch alerts
     const alerts = await smartHomeApi.alerts.getAll();
 
     if (!alerts || alerts.length === 0) {
@@ -2506,7 +2505,7 @@ async function viewAlerts() {
       return;
     }
 
-    // Generate HTML for each alert
+    //generate HTML for each alert
     alertsList.innerHTML = alerts
       .map(
         (alert) => `
@@ -2528,16 +2527,16 @@ async function viewAlerts() {
       )
       .join("");
 
-    // Add event listeners to resolve buttons
+    //add event listeners to resolve buttons
     alertsList.querySelectorAll(".resolve-btn").forEach((button) => {
       button.addEventListener("click", async () => {
         const alertId = button.dataset.alertId;
         try {
           await smartHomeApi.alerts.resolve(alertId);
-          // Remove the alert from the view
+          //remove the alert from the view
           button.closest(".alert").remove();
 
-          // If no alerts left, show message
+          //if no alerts left, show message
           if (alertsList.querySelectorAll(".alert").length === 0) {
             alertsList.innerHTML =
               '<div class="alert alert-info">No pending alerts</div>';
@@ -2604,33 +2603,33 @@ function getTimeAgo(timestamp) {
 
 async function handleLogout() {
   try {
-    // Show confirmation modal
+    //show confirmation modal
     const confirmModal = new bootstrap.Modal(
       document.getElementById("logoutConfirmModal")
     );
     confirmModal.show();
 
-    // Wait for user confirmation
+    //wait for user confirmation
     document
       .getElementById("confirmLogout")
       .addEventListener("click", async function () {
         try {
-          // Hide confirmation modal
+          //hide confirmation modal
           confirmModal.hide();
 
-          // Show loading modal
+          //show loading modal
           const loadingModal = new bootstrap.Modal(
             document.getElementById("loadingModal")
           );
           loadingModal.show();
 
-          // Clear all local storage items
+          //clear all local storage items
           localStorage.clear();
 
-          // Clear any session storage items
+          //clear any session storage items
           sessionStorage.clear();
 
-          // Clear any cookies
+          //clear any cookies
           document.cookie.split(";").forEach(function (c) {
             document.cookie = c
               .replace(/^ +/, "")
@@ -2640,7 +2639,7 @@ async function handleLogout() {
               );
           });
 
-          // Redirect to login page
+          //redirect to login page
           window.location.href = "/login";
         } catch (error) {
           console.error("Error during logout:", error);
@@ -2703,7 +2702,7 @@ async function handlePasswordReset() {
   }
 
   try {
-    // Show loading state
+    //show loading state
     const originalText = saveButton.textContent;
     saveButton.disabled = true;
     saveButton.innerHTML =
@@ -2734,7 +2733,7 @@ async function handlePasswordReset() {
     errorDiv.textContent = `Failed to reset password: ${error.message}`;
     errorDiv.classList.remove("d-none");
   } finally {
-    // Reset button state
+    //reset button state
     saveButton.disabled = false;
     saveButton.textContent = "Reset Password";
   }

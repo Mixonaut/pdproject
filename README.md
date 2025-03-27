@@ -12,7 +12,7 @@ A modern web application for managing and controlling smart home devices, built 
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before you run, ensure you have the following installed:
 
 - Node.js (v14 or higher)
 - MySQL Server
